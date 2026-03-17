@@ -1,0 +1,154 @@
+{
+  "name": "artclaw-creative-suite",
+  "version": "1.0.0",
+  "displayName": "ARTCLAW AI Creative Suite",
+  "description": "通过 MCP 协议调用 ARTCLAW 平台的 AI 内容创作能力，支持 AI 生图、生视频、PPT 生成、工作流执行、多模态分析、Prompt 优化等能力。",
+  "author": {
+    "name": "ARTCLAW Team",
+    "url": "https://artclaw.ai"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "image-generation",
+    "video-generation",
+    "ppt",
+    "mcp",
+    "artclaw",
+    "artclaw",
+    "marketing",
+    "creative",
+    "生成图片",
+    "生成视频",
+    "AI绘画"
+  ],
+  "skill": "SKILL.md",
+  "main": "__init__.py",
+  "mcp": {
+    "servers": {
+      "artclaw": {
+        "type": "remote",
+        "url": "http://43.156.26.92:8892/mcp",
+        "transport": "streamable-http"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "generate_image",
+      "description": "文生图 / 图生图，根据文本描述生成图片，支持参考图（图生图模式）",
+      "requiresAuth": true
+    },
+    {
+      "name": "generate_marketing_image",
+      "description": "营销广告图生成，自动增强风格提示词",
+      "requiresAuth": true
+    },
+    {
+      "name": "generate_product_carousel",
+      "description": "产品套图（多图轮播），适合电商、小红书等场景",
+      "requiresAuth": true
+    },
+    {
+      "name": "generate_video",
+      "description": "文生视频 / 图生视频（I2V）",
+      "requiresAuth": true
+    },
+    {
+      "name": "generate_ppt_slides",
+      "description": "AI PPT 幻灯片生成（多页图片）",
+      "requiresAuth": true
+    },
+    {
+      "name": "list_workflows",
+      "description": "列出所有可用预设工作流",
+      "requiresAuth": true
+    },
+    {
+      "name": "run_workflow",
+      "description": "执行预设工作流（动画 / 微电影 / 漫画 / 电商详情页等）",
+      "requiresAuth": true
+    },
+    {
+      "name": "view_image",
+      "description": "AI 图片理解与描述（同步返回）",
+      "requiresAuth": true
+    },
+    {
+      "name": "view_video",
+      "description": "AI 视频内容分析（同步返回）",
+      "requiresAuth": true
+    },
+    {
+      "name": "analyze_video_script",
+      "description": "短剧剧本深度分析 + 互动节点设计",
+      "requiresAuth": true
+    },
+    {
+      "name": "analyze_character_profiles",
+      "description": "从故事文本生成角色人物小传",
+      "requiresAuth": true
+    },
+    {
+      "name": "get_job_status",
+      "description": "查询异步任务状态和进度",
+      "requiresAuth": true
+    },
+    {
+      "name": "get_job_result",
+      "description": "获取已完成任务的结果",
+      "requiresAuth": true
+    },
+    {
+      "name": "list_jobs",
+      "description": "列出历史任务（支持按状态/类型过滤）",
+      "requiresAuth": true
+    },
+    {
+      "name": "cancel_job",
+      "description": "取消正在进行的任务",
+      "requiresAuth": true
+    },
+    {
+      "name": "generate_logo_prompt",
+      "description": "生成 Logo 提示词（免费，无需 API Key）",
+      "requiresAuth": false
+    },
+    {
+      "name": "generate_cover_prompt",
+      "description": "生成封面图提示词（免费，无需 API Key）",
+      "requiresAuth": false
+    },
+    {
+      "name": "enhance_marketing_prompt",
+      "description": "智能增强营销图提示词（免费，无需 API Key）",
+      "requiresAuth": false
+    },
+    {
+      "name": "generate_carousel_prompts",
+      "description": "生成整套轮播图提示词系列（免费，无需 API Key）",
+      "requiresAuth": false
+    }
+  ],
+  "auth": {
+    "type": "apiKey",
+    "paramName": "api_key",
+    "paramLocation": "tool_argument",
+    "prefix": "vk_",
+    "required": true,
+    "helpUrl": "https://staging.artclaw.ai/#/settings",
+    "helpText": "在 ARTCLAW 官网 Settings > API Keys 中创建，Key 以 vk_ 开头"
+  },
+  "install": {
+    "steps": [
+      "在 ARTCLAW 官网 https://staging.artclaw.ai/#/settings 创建 API Key（以 vk_ 开头）",
+      "将 MCP 服务器 http://43.156.26.92:8892/mcp 添加到 Agent 配置的 mcpServers 字段",
+      "每次调用工具时通过 api_key 参数传入 Key"
+    ],
+    "mcpConfig": {
+      "artclaw": {
+        "url": "http://43.156.26.92:8892/mcp"
+      }
+    }
+  }
+}
