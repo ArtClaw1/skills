@@ -1,48 +1,54 @@
 """ARTCLAW AI Creative Suite — OpenCode Skill Package
 
-This package provides AI content creation capabilities via the ARTCLAW MCP server,
+This package provides AI content creation capabilities via the ARTCLAW REST API,
 including image generation, video generation, PPT creation, workflow execution,
 multimodal analysis, and prompt enhancement.
 
-MCP Server: http://43.156.26.92:8892/mcp
-Auth: API Key (starts with vk_) passed as `api_key` tool argument
-Get your key: https://staging.artclaw.ai/#/settings
+REST API Base: http://43.156.26.92:8892/api/v1
+Auth: API Key (starts with vk_) passed as `X-API-KEY` HTTP header
+Get your key: https://staging.artclaw.com/#/settings
 """
 
 SKILL_NAME = "artclaw-creative-suite"
-SKILL_VERSION = "1.0.0"
-MCP_SERVER_URL = "http://43.156.26.92:8892/mcp"
-MCP_TRANSPORT = "streamable-http"
+SKILL_VERSION = "2.0.0"
+API_BASE_URL = "http://43.156.26.92:8892/api/v1"
 
-MCP_CONFIG = {
-    "artclaw": {
-        "url": MCP_SERVER_URL,
-    }
+API_CONFIG = {
+    "base_url": API_BASE_URL,
+    "auth_header": "X-API-KEY",
 }
 
-TOOLS = [
-    "generate_image",
-    "generate_marketing_image",
-    "generate_product_carousel",
-    "generate_video",
-    "generate_ppt_slides",
-    "list_workflows",
-    "run_workflow",
-    "view_image",
-    "view_video",
-    "analyze_video_script",
-    "analyze_character_profiles",
-    "get_job_status",
-    "get_job_result",
-    "list_jobs",
-    "cancel_job",
-    "generate_logo_prompt",
-    "generate_cover_prompt",
-    "enhance_marketing_prompt",
-    "generate_carousel_prompts",
-]
+ENDPOINTS = {
+    # 生成类（异步，返回 job_id）
+    "generate_image": ("POST", "/generate/image"),
+    "generate_video": ("POST", "/generate/video"),
+    "generate_marketing_image": ("POST", "/generate/marketing-image"),
+    "generate_product_carousel": ("POST", "/generate/product-carousel"),
+    "generate_ppt": ("POST", "/generate/ppt"),
+    # 工作流
+    "list_workflows": ("GET", "/workflows"),
+    "run_workflow": ("POST", "/workflows/{workflow_id}/run"),
+    # 分析类（同步返回）
+    "analyze_image": ("POST", "/analyze/image"),
+    "analyze_video": ("POST", "/analyze/video"),
+    "analyze_script": ("POST", "/analyze/script"),
+    "analyze_characters": ("POST", "/analyze/characters"),
+    # 任务管理
+    "get_job": ("GET", "/jobs/{job_id}"),
+    "list_jobs": ("GET", "/jobs"),
+    "cancel_job": ("POST", "/jobs/{job_id}/cancel"),
+    # 账户
+    "account_info": ("GET", "/account/info"),
+    # 鉴权
+    "verify_key": ("POST", "/auth/verify"),
+    # Prompt 工具（免费，无需 Key）
+    "prompt_logo": ("POST", "/prompts/logo"),
+    "prompt_cover": ("POST", "/prompts/cover"),
+    "prompt_marketing": ("POST", "/prompts/marketing"),
+    "prompt_carousel": ("POST", "/prompts/carousel"),
+}
 
 
-def get_mcp_config() -> dict:
-    """Return the MCP server configuration for this skill."""
-    return MCP_CONFIG
+def get_api_config() -> dict:
+    """Return the REST API configuration for this skill."""
+    return API_CONFIG
