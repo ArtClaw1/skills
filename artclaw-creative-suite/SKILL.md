@@ -155,7 +155,12 @@ X-API-KEY: vk_your_key_here
 
 ## 核心模式：异步生成
 
-**所有生成类接口**（图片/视频/PPT/工作流）均为异步模式。调用后立即返回 `job_id`，需轮询状态直到完成。
+**所有生成类接口**（图片/视频/PPT/工作流）均为异步模式。调用后立即返回 `job_id`，需要轮询状态直到完成。
+
+参考时常： 
+- 图片生成耗时1～3分钟， 建议每10秒轮询
+- 视频生成耗时约2～10分钟，建议每30秒轮询
+
 
 ### 标准流程
 
@@ -171,6 +176,7 @@ X-API-KEY: vk_your_key_here
 
 | status | 含义 |
 |--------|------|
+| `upload` | 上传中，预期很短很短 | 
 | `pending` | 排队等待中 |
 | `running` | 生成中 |
 | `success` | 已完成，`result` 字段包含结果 URL |
@@ -648,6 +654,129 @@ curl -sL https://raw.githubusercontent.com/ArtClaw1/skills/main/artclaw-creative
 ```
 
 与本地 `manifest.json` 中的 `version` 字段对比，决定是否需要更新。
+
+---
+
+## IM 渠道投递指南
+
+生成图片/视频完成后，Agent 应根据当前 IM 渠道，使用最合适的消息类型将结果投递给用户，而非仅发送 URL 链接。
+
+### 飞书（Feishu / Lark）
+
+#### 发送视频
+
+飞书发送视频需要三步：上传视频文件 → （可选）上传封面图 → 发送 `media` 消息。
+
+```bash
+python3 scripts/feishu_send_video.py \
+    --video /path/to/video.mp4 \
+    --to ou_xxx \
+    --cover-url https://oss.artclaw.app/cover.jpg \
+    --duration 20875
+```
+
+**关键注意事项：**
+
+| 要点 | 说明 |
+|------|------|
+| msg_type | 必须是 `media`，**不是** `video` 或 `file` |
+| file_type | 上传时使用 `mp4` |
+| duration | 单位是 **毫秒**（ms），省略则播放器显示 `00:00` |
+| 封面 | 通过 `im/v1/images` 上传获取 `image_key`；不传封面也能发送，但显示黑色背景无预览 |
+
+**API 流程：**
+
+1. `POST /open-apis/im/v1/files` — 上传视频，获取 `file_key`
+2. `POST /open-apis/im/v1/images` — 上传封面图，获取 `image_key`（可选）
+3. `POST /open-apis/im/v1/messages` — 发送消息，`msg_type=media`，content 包含 `file_key` + `image_key`
+
+#### 发送图片
+
+```
+msg_type: image
+```
+
+1. `POST /open-apis/im/v1/images`（`image_type=message`）— 上传图片，获取 `image_key`
+2. `POST /open-apis/im/v1/messages` — 发送消息，`msg_type=image`，content 包含 `image_key`
+
+#### 凭证获取
+
+从 `~/.openclaw/openclaw.json` 中读取：
+
+```json
+{
+  "channels": {
+    "feishu": {
+      "accounts": {
+        "main": {
+          "appId": "cli_xxx",
+          "appSecret": "xxx"
+        }
+      }
+    }
+  }
+}
+```
+
+通过 `appId` + `appSecret` 换取 `tenant_access_token`：
+
+```
+POST https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal
+```
+
+---
+
+### Telegram
+
+#### 发送视频
+
+通过 Telegram Bot API `sendVideo` 发送视频文件，支持缩略图和字幕。
+
+```bash
+TELEGRAM_BOT_TOKEN=<token> python3 scripts/telegram_send_video.py \
+    --video /path/to/video.mp4 \
+    --to <chat_id> \
+    --cover-url https://oss.artclaw.app/cover.jpg \
+    --duration 5 \
+    --caption "视频已生成！"
+```
+
+**关键注意事项：**
+
+| 要点 | 说明 |
+|------|------|
+| duration | 单位是 **秒**（s），与飞书的毫秒不同 |
+| Bot Token | **必须**通过 `TELEGRAM_BOT_TOKEN` 环境变量提供，**不可**通过 CLI 参数传递（`ps aux` 可见） |
+| supports_streaming | 默认开启，允许用户边下载边播放 |
+| thumbnail | 可选，传入 URL 会自动下载并作为缩略图发送 |
+
+#### 发送图片
+
+通过 `sendPhoto` API 发送图片：
+
+```
+POST /bot<token>/sendPhoto
+```
+
+参数：`chat_id`、`photo`（文件或 URL）、`caption`（可选）
+
+#### 凭证获取
+
+Bot Token 通过环境变量提供：
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456:ABC-DEF..."
+```
+
+---
+
+### IM 投递 — Agent 行为规范
+
+1. **优先原生消息** — 视频使用原生视频消息（飞书 `media` / Telegram `sendVideo`），图片使用原生图片消息，**不要**仅发送 URL 链接
+2. **自动选择渠道** — 根据当前对话所在的 IM 渠道自动选择对应的投递方式
+3. **调用脚本执行** — 使用 `scripts/feishu_send_video.py` 或 `scripts/telegram_send_video.py` 执行实际投递
+4. **先下载再发送** — 从 ARTCLAW 生成结果的 URL 下载文件到本地，再通过脚本上传发送
+5. **附带封面** — 发送视频时尽量提供封面图（可从视频第一帧截取或使用生成时的参考图），提升用户体验
 
 ---
 
