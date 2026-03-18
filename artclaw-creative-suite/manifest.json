@@ -23,6 +23,22 @@
   ],
   "skill": "SKILL.md",
   "main": "__init__.py",
+  "scripts": {
+    "feishu_send_video": {
+      "path": "scripts/feishu_send_video.py",
+      "description": "通过飞书发送视频/图片消息（上传文件 → 获取 file_key → 发送 media 消息）",
+      "runtime": "python3",
+      "dependencies": ["requests"],
+      "credentials": "~/.openclaw/openclaw.json → channels.feishu"
+    },
+    "telegram_send_video": {
+      "path": "scripts/telegram_send_video.py",
+      "description": "通过 Telegram Bot API 发送视频消息（sendVideo，支持 thumbnail 和 caption）",
+      "runtime": "python3",
+      "dependencies": ["requests"],
+      "credentials": "TELEGRAM_BOT_TOKEN 环境变量"
+    }
+  },
   "api": {
     "baseUrl": "http://43.156.26.92:8892/api/v1",
     "transport": "http",
