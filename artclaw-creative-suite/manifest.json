@@ -73,6 +73,18 @@
     "helpText": "在 ARTCLAW 官网 Settings > API Keys 中创建，Key 以 vk_ 开头",
     "publicPaths": ["/api/v1/prompts/*", "/api/v1/auth/verify"]
   },
+  "metadata": {
+    "openclaw": {
+      "emoji": "🎨",
+      "requires": {
+        "env": ["ARTCLAW_API_KEY"]
+      },
+      "primaryEnv": "ARTCLAW_API_KEY",
+      "envMapping": {
+        "ARTCLAW_API_KEY": "X-API-KEY"
+      }
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ArtClaw1/skills",

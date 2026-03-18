@@ -9,6 +9,18 @@ description: |
 compatibility:
   dependencies:
     - ARTCLAW REST API (http://43.156.26.92:8892/api/v1)
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "🎨",
+        "requires":
+          {
+            "env": ["ARTCLAW_API_KEY"]
+          },
+        "primaryEnv": "ARTCLAW_API_KEY"
+      }
+  }
 ---
 
 # ARTCLAW AI Creative Suite
