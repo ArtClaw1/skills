@@ -4,14 +4,14 @@ This package provides AI content creation capabilities via the ARTCLAW REST API,
 including image generation, video generation, PPT creation, workflow execution,
 multimodal analysis, and prompt enhancement.
 
-REST API Base: http://43.156.26.92:8892/api/v1
+REST API Base: http://staging.artclaw.com/api/v1
 Auth: API Key (starts with vk_) passed as `X-API-KEY` HTTP header
 Get your key: https://staging.artclaw.com/#/settings
 """
 
 SKILL_NAME = "artclaw-creative-suite"
 SKILL_VERSION = "2.0.0"
-API_BASE_URL = "http://43.156.26.92:8892/api/v1"
+API_BASE_URL = "http://staging.artclaw.com/api/v1"
 
 API_CONFIG = {
     "base_url": API_BASE_URL,
