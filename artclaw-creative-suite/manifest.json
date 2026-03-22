@@ -2,7 +2,7 @@
   "name": "artclaw-creative-suite",
   "version": "1.1.0",
   "displayName": "ARTCLAW AI Creative Suite",
-  "description": "通过 REST API 调用 ARTCLAW 平台的 AI 内容创作能力，支持 AI 生图、生视频、PPT 生成、工作流执行、多模态分析、Prompt 优化等能力。",
+  "description": "通过 REST API 调用 ARTCLAW 平台的 AI 内容创作能力，支持 AI 生图、生视频、工作流执行、多模态分析、Prompt 优化等能力。",
   "author": {
     "name": "ARTCLAW Team",
     "url": "https://staging.artclaw.com"
@@ -12,7 +12,6 @@
     "ai",
     "image-generation",
     "video-generation",
-    "ppt",
     "rest-api",
     "artclaw",
     "marketing",
@@ -46,9 +45,7 @@
       "generate": {
         "image": { "method": "POST", "path": "/generate/image" },
         "video": { "method": "POST", "path": "/generate/video" },
-        "marketing-image": { "method": "POST", "path": "/generate/marketing-image" },
-        "product-carousel": { "method": "POST", "path": "/generate/product-carousel" },
-        "ppt": { "method": "POST", "path": "/generate/ppt" }
+        "marketing-image": { "method": "POST", "path": "/generate/marketing-image" }
       },
       "analyze": {
         "image": { "method": "POST", "path": "/analyze/image" },
@@ -74,8 +71,7 @@
       "prompts": {
         "logo": { "method": "POST", "path": "/prompts/logo" },
         "cover": { "method": "POST", "path": "/prompts/cover" },
-        "marketing": { "method": "POST", "path": "/prompts/marketing" },
-        "carousel": { "method": "POST", "path": "/prompts/carousel" }
+        "marketing": { "method": "POST", "path": "/prompts/marketing" }
       }
     }
   },

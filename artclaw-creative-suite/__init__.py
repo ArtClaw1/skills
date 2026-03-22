@@ -1,7 +1,7 @@
 """ARTCLAW AI Creative Suite — OpenCode Skill Package
 
 This package provides AI content creation capabilities via the ARTCLAW REST API,
-including image generation, video generation, PPT creation, workflow execution,
+including image generation, video generation, workflow execution,
 multimodal analysis, and prompt enhancement.
 
 REST API Base: http://staging.artclaw.com/api/v1
@@ -23,8 +23,6 @@ ENDPOINTS = {
     "generate_image": ("POST", "/generate/image"),
     "generate_video": ("POST", "/generate/video"),
     "generate_marketing_image": ("POST", "/generate/marketing-image"),
-    "generate_product_carousel": ("POST", "/generate/product-carousel"),
-    "generate_ppt": ("POST", "/generate/ppt"),
     # 工作流
     "list_workflows": ("GET", "/workflows"),
     "run_workflow": ("POST", "/workflows/{workflow_id}/run"),
@@ -45,7 +43,6 @@ ENDPOINTS = {
     "prompt_logo": ("POST", "/prompts/logo"),
     "prompt_cover": ("POST", "/prompts/cover"),
     "prompt_marketing": ("POST", "/prompts/marketing"),
-    "prompt_carousel": ("POST", "/prompts/carousel"),
 }
 
 
