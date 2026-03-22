@@ -427,19 +427,19 @@ curl -X POST http://staging.artclaw.com/api/v1/generate/video \
 
 ---
 
-### POST `/api/v1/workflows/{workflow_id}/run` — 执行工作流
+### POST `/api/v1/workflows/{workflow_name}/run` — 执行工作流
 
 **请求体：**
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `inputs` | dict | **必填** | 工作流输入变量（ |
+| `inputs` | dict | **必填** | 工作流输入变量 |
 | `timeout` | int | `28800` | 超时秒数（默认 8 小时） |
 | `callback_url` | string | `""` | 回调地址 |
 
 **示例：**
 ```bash
-curl -L -X POST http://staging.artclaw.com/api/v1/workflows/2603-wf-anime-production/run \
+curl -L -X POST http://staging.artclaw.com/api/v1/workflows/anime-production/run \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: vk_xxx" \
   -d '{"inputs": {"story": "一个宇航员在月球上发现了外星文明的遗迹"}}'
@@ -765,5 +765,5 @@ export TELEGRAM_BOT_TOKEN="123456:ABC-DEF..."
 | `401` | `Unauthorized` | API Key 无效、缺失或已撤销 | 引导用户重新生成 Key |
 | `402` / 业务错误 | 积分不足 | 账户余额不足 | 引导充值：https://staging.artclaw.com/#/settings |
 | `404` | `Job not found` | job_id 不存在或已过期（24h） | 提示任务已过期，请重新生成 |
-| `404` | `Workflow not found` | workflow_id 不存在 | 先调用 `GET /api/v1/workflows` 确认可用 ID |
+| `404` | `Workflow not found` | workflow 不存在 | 先调用 `GET /api/v1/workflows` 确认可用 ID |
 | `429` | `Too Many Requests` | 超过频率限制 | 等待后重试，参见频率限制章节 |
