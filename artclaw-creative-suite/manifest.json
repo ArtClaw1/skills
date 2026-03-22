@@ -5,7 +5,7 @@
   "description": "通过 REST API 调用 ARTCLAW 平台的 AI 内容创作能力，支持 AI 生图、生视频、工作流执行、多模态分析、Prompt 优化等能力。",
   "author": {
     "name": "ARTCLAW Team",
-    "url": "https://artclaw.ai"
+    "url": "https://staging.artclaw.com"
   },
   "license": "MIT",
   "keywords": [
@@ -39,7 +39,7 @@
     }
   },
   "api": {
-    "baseUrl": "http://43.156.26.92:8892/api/v1",
+    "baseUrl": "http://staging.artclaw.com/api/v1",
     "transport": "http",
     "endpoints": {
       "generate": {
@@ -110,7 +110,7 @@
     "steps": [
       "在 ARTCLAW 官网 https://staging.artclaw.com/#/settings 创建 API Key（以 vk_ 开头）",
       "在 HTTP 请求 Header 中添加 X-API-KEY: vk_your_key_here",
-      "调用 REST API 端点 http://43.156.26.92:8892/api/v1/*"
+      "调用 REST API 端点 http://staging.artclaw.com/api/v1/*"
     ]
   }
 }
