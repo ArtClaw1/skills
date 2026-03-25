@@ -1,6 +1,12 @@
+<p align="right">
+   <a href="./README.MD">简体中文</a> | <a href="./README.en.md">English</a>
+</p>
+
 # 🎨 ARTCLAW AI Creative Suite — OpenClaw Skill
 
 一站式 AI 内容创作 Skill，接入 [ARTCLAW](https://artclaw.com) 平台全套创作能力，支持 AI 生图、生视频、PPT 生成、多模态分析与工作流编排。
+
+English documentation: [README.en.md](./README.en.md)
 
 ---
  
