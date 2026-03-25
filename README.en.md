@@ -25,7 +25,7 @@ An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw
 Tell OpenClaw directly:
 
 ```text
-安装skill: https://github.com/ArtClaw1/skills.git
+install skill: https://github.com/ArtClaw1/skills.git
 ```
 
 ---

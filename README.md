@@ -24,8 +24,10 @@ English documentation: [README.en.md](./README.en.md)
 
 ## 📦 在 OpenClaw 上安装
 
-直接跟OpenClaw说：安装skill: https://github.com/ArtClaw1/skills.git
-
+直接跟OpenClaw说：
+```text
+安装skill: https://github.com/ArtClaw1/skills.git
+```
 ---
 
 ## 🔑 配置 API Key
