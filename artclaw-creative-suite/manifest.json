@@ -39,7 +39,7 @@
     }
   },
   "api": {
-    "baseUrl": "http://artclaw.com/api/v1",
+    "baseUrl": "https://artclaw.com/api/v1",
     "transport": "http",
     "endpoints": {
       "generate": {
@@ -54,12 +54,12 @@
         "characters": { "method": "POST", "path": "/analyze/characters" }
       },
       "workflows": {
-        "list": { "method": "GET", "path": "/workflows" },
+        "list": { "method": "GET", "path": "/workflows/" },
         "run": { "method": "POST", "path": "/workflows/{workflow_id}/run" }
       },
       "jobs": {
         "get": { "method": "GET", "path": "/jobs/{job_id}" },
-        "list": { "method": "GET", "path": "/jobs" },
+        "list": { "method": "GET", "path": "/jobs/" },
         "cancel": { "method": "POST", "path": "/jobs/{job_id}/cancel" }
       },
       "account": {
@@ -71,7 +71,8 @@
       "prompts": {
         "logo": { "method": "POST", "path": "/prompts/logo" },
         "cover": { "method": "POST", "path": "/prompts/cover" },
-        "marketing": { "method": "POST", "path": "/prompts/marketing" }
+        "marketing": { "method": "POST", "path": "/prompts/marketing" },
+        "carousel": { "method": "POST", "path": "/prompts/carousel" }
       }
     }
   },
@@ -110,7 +111,7 @@
     "steps": [
       "在 ARTCLAW 官网 https://artclaw.com/#/settings 创建 API Key（以 vk_ 开头）",
       "在 HTTP 请求 Header 中添加 X-API-KEY: vk_your_key_here",
-      "调用 REST API 端点 http://artclaw.com/api/v1/*"
+      "调用 REST API 端点 https://artclaw.com/api/v1/*"
     ]
   }
 }

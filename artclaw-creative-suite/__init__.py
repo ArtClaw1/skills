@@ -4,14 +4,14 @@ This package provides AI content creation capabilities via the ARTCLAW REST API,
 including image generation, video generation, workflow execution,
 multimodal analysis, and prompt enhancement.
 
-REST API Base: http://artclaw.com/api/v1
+REST API Base: https://artclaw.com/api/v1
 Auth: API Key (starts with vk_) passed as `X-API-KEY` HTTP header
 Get your key: https://artclaw.com/#/settings
 """
 
 SKILL_NAME = "artclaw-creative-suite"
-SKILL_VERSION = "2.0.0"
-API_BASE_URL = "http://artclaw.com/api/v1"
+SKILL_VERSION = "1.1.0"
+API_BASE_URL = "https://artclaw.com/api/v1"
 
 API_CONFIG = {
     "base_url": API_BASE_URL,
@@ -24,7 +24,7 @@ ENDPOINTS = {
     "generate_video": ("POST", "/generate/video"),
     "generate_marketing_image": ("POST", "/generate/marketing-image"),
     # 工作流
-    "list_workflows": ("GET", "/workflows"),
+    "list_workflows": ("GET", "/workflows/"),
     "run_workflow": ("POST", "/workflows/{workflow_id}/run"),
     # 分析类（同步返回）
     "analyze_image": ("POST", "/analyze/image"),
@@ -33,7 +33,7 @@ ENDPOINTS = {
     "analyze_characters": ("POST", "/analyze/characters"),
     # 任务管理
     "get_job": ("GET", "/jobs/{job_id}"),
-    "list_jobs": ("GET", "/jobs"),
+    "list_jobs": ("GET", "/jobs/"),
     "cancel_job": ("POST", "/jobs/{job_id}/cancel"),
     # 账户
     "account_info": ("GET", "/account/info"),
@@ -43,6 +43,7 @@ ENDPOINTS = {
     "prompt_logo": ("POST", "/prompts/logo"),
     "prompt_cover": ("POST", "/prompts/cover"),
     "prompt_marketing": ("POST", "/prompts/marketing"),
+    "prompt_carousel": ("POST", "/prompts/carousel"),
 }
 
 
