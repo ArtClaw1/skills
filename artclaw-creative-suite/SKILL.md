@@ -154,90 +154,13 @@ X-API-KEY: vk_your_key_here
 
 ---
 
-## Prompt 工具请求参数
-
-Prompt 工具均为免费接口，无需 API Key。请求体必须包含以下字段：
-
-### Logo 提示词 (`POST /api/v1/prompts/logo`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `logo_type` | string | ✅ | Logo 类型，可选值：`wordmark`、`icon`、`combination`、`badge`、`abstract` |
-| `brand_name` | string | ✅ | 品牌名称 |
-| `industry` | string | ✅ | 所属行业 |
-
-### 封面提示词 (`POST /api/v1/prompts/cover`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `subject` | string | ✅ | 封面主题描述 |
-
-### 营销图提示词 (`POST /api/v1/prompts/marketing`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `prompt` | string | ✅ | 营销场景描述 |
-
-### 轮播图提示词 (`POST /api/v1/prompts/carousel`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `theme` | string | ✅ | 轮播图主题 |
-| `style` | string | ✅ | 视觉风格 |
-| `color_scheme` | string | ✅ | 配色方案 |
-| `title` | string | ✅ | 标题文案 |
-
-所有 Prompt 接口返回格式统一：
-```json
-{"prompt": "生成的优化提示词..."}
-```
-
----
-
-## 分析端点请求参数
-
-分析类接口为**同步**接口，直接返回 `result` 字段（不返回 `job_id`）。
-
-### 图片分析 (`POST /api/v1/analyze/image`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `image_urls` | string[] | ✅ | 图片 URL 数组（支持多张） |
-
-### 视频分析 (`POST /api/v1/analyze/video`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `video_url` | string | ✅ | 视频 URL |
-
-### 剧本提取 (`POST /api/v1/analyze/script`)
-
-从视频中提取剧本并生成互动节点设计。
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `video_url` | string | ✅ | 视频 URL（从视频提取剧本，非传入文本） |
-
-### 人物小传 (`POST /api/v1/analyze/characters`)
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `story_text` | string | ✅ | 故事文本 |
-
-所有分析接口返回格式统一：
-```json
-{"result": "分析结果文本..."}
-```
-
----
-
 ## 频率限制
 
 | 分类 | 路径 | 限制 |
 |------|------|------|
-| 生成类 | `/api/v1/generate/*`、`/api/v1/workflows/*`、`/api/v1/analyze/*` | 10 次/分钟 |
-| 查询类 | `/api/v1/jobs/*`、`/api/v1/account/*` | 60 次/分钟 |
-| 公开类 | `/api/v1/prompts/*` | 30 次/分钟 |
+| 生成类 | `/api/v1/generate/*`、`/api/v1/workflows/*`、`/api/v1/analyze/*` | 120 次/分钟 |
+| 查询类 | `/api/v1/jobs/*`、`/api/v1/account/*` | 120 次/分钟 |
+| 公开类 | `/api/v1/prompts/*` | 120 次/分钟 |
 
 超限返回 `429 Too Many Requests`。
 
