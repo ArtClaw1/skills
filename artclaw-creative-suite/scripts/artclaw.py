@@ -583,71 +583,6 @@ def api_verify_key(config: dict, api_key_to_verify: str, *,
     )
 
 
-# --- Prompts (free, no API key required) ---
-
-def api_prompt_logo(config: dict, brand_name: str, logo_type: str,
-                    industry: str, *, style_options: dict = None,
-                    dry_run: bool = False) -> dict:
-    body: Dict[str, Any] = {
-        "brand_name": brand_name,
-        "logo_type": logo_type,
-        "industry": industry,
-    }
-    if style_options:
-        body["style_options"] = style_options
-    return _request_with_retry(
-        "POST", f"{config['baseUrl']}/prompts/logo",
-        json_body=body, dry_run=dry_run,
-    )
-
-
-def api_prompt_cover(config: dict, subject: str, *, style: str = None,
-                     composition: str = None, color: str = None,
-                     text_space: str = None, aspect_ratio: str = None,
-                     dry_run: bool = False) -> dict:
-    body: Dict[str, Any] = {"subject": subject}
-    if style:
-        body["style"] = style
-    if composition:
-        body["composition"] = composition
-    if color:
-        body["color"] = color
-    if text_space:
-        body["text_space"] = text_space
-    if aspect_ratio:
-        body["aspect_ratio"] = aspect_ratio
-    return _request_with_retry(
-        "POST", f"{config['baseUrl']}/prompts/cover",
-        json_body=body, dry_run=dry_run,
-    )
-
-
-def api_prompt_marketing(config: dict, prompt: str, *,
-                         dry_run: bool = False) -> dict:
-    return _request_with_retry(
-        "POST", f"{config['baseUrl']}/prompts/marketing",
-        json_body={"prompt": prompt}, dry_run=dry_run,
-    )
-
-
-def api_prompt_carousel(config: dict, theme: str, *, style: str = None,
-                        color_scheme: str = None, title: str = None,
-                        count: int = None, dry_run: bool = False) -> dict:
-    body: Dict[str, Any] = {"theme": theme}
-    if style:
-        body["style"] = style
-    if color_scheme:
-        body["color_scheme"] = color_scheme
-    if title:
-        body["title"] = title
-    if count is not None:
-        body["count"] = count
-    return _request_with_retry(
-        "POST", f"{config['baseUrl']}/prompts/carousel",
-        json_body=body, dry_run=dry_run,
-    )
-
-
 # ---------------------------------------------------------------------------
 # Section 7: High-Level Operations
 # ---------------------------------------------------------------------------
@@ -1089,59 +1024,6 @@ def cmd_verify_key(args, config: dict):
                             dry_run=getattr(args, "dry_run", False))
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
-
-# --- Prompt commands (free, no key) ---
-
-def cmd_prompt_logo(args, config: dict):
-    """Generate a logo design prompt."""
-    kwargs: Dict[str, Any] = {
-        "brand_name": args.brand_name,
-        "logo_type": args.logo_type,
-        "industry": args.industry,
-    }
-    if args.style_options:
-        try:
-            kwargs["style_options"] = json.loads(args.style_options)
-        except json.JSONDecodeError as e:
-            print(json.dumps({"error": f"--style-options must be valid JSON: {e}"}),
-                  file=sys.stderr)
-            sys.exit(1)
-    result = api_prompt_logo(config, **kwargs,
-                             dry_run=getattr(args, "dry_run", False))
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-
-
-def cmd_prompt_cover(args, config: dict):
-    """Generate a cover image prompt."""
-    kwargs: Dict[str, Any] = {"subject": args.subject}
-    kwargs.update(_collect_optional_args(args, [
-        "style", "composition", "color", "text_space", "aspect_ratio",
-    ]))
-    result = api_prompt_cover(config, **kwargs,
-                              dry_run=getattr(args, "dry_run", False))
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-
-
-def cmd_prompt_marketing(args, config: dict):
-    """Enhance a marketing image prompt."""
-    result = api_prompt_marketing(
-        config, args.prompt,
-        dry_run=getattr(args, "dry_run", False),
-    )
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-
-
-def cmd_prompt_carousel(args, config: dict):
-    """Generate carousel/slideshow prompts."""
-    kwargs: Dict[str, Any] = {"theme": args.theme}
-    kwargs.update(_collect_optional_args(args, [
-        "style", "color_scheme", "title", "count",
-    ]))
-    result = api_prompt_carousel(config, **kwargs,
-                                 dry_run=getattr(args, "dry_run", False))
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-
-
 # --- Config commands ---
 
 def cmd_config(args, config: dict):
@@ -1410,47 +1292,6 @@ def build_parser() -> argparse.ArgumentParser:
                    help="API key to verify (uses configured key if omitted)")
     _add_dry_run(p)
 
-    # --- prompt-logo ---
-    p = sub.add_parser("prompt-logo", help="Generate logo design prompt (free)")
-    p.add_argument("--brand-name", required=True, help="Brand name")
-    p.add_argument("--logo-type", required=True,
-                   choices=["wordmark", "icon", "combination", "badge", "abstract"],
-                   help="Logo type")
-    p.add_argument("--industry", required=True, help="Industry/sector")
-    p.add_argument("--style-options", default=None,
-                   help="Style options as JSON string")
-    _add_dry_run(p)
-
-    # --- prompt-cover ---
-    p = sub.add_parser("prompt-cover",
-                       help="Generate cover image prompt (free)")
-    p.add_argument("--subject", required=True, help="Cover subject/topic")
-    p.add_argument("--style", default=None, help="Visual style")
-    p.add_argument("--composition", default=None, help="Composition style")
-    p.add_argument("--color", default=None, help="Color scheme")
-    p.add_argument("--text-space", default=None,
-                   help="Space for text overlay")
-    p.add_argument("--aspect-ratio", default=None, help="Aspect ratio")
-    _add_dry_run(p)
-
-    # --- prompt-marketing ---
-    p = sub.add_parser("prompt-marketing",
-                       help="Enhance marketing image prompt (free)")
-    p.add_argument("--prompt", required=True,
-                   help="Marketing description to enhance")
-    _add_dry_run(p)
-
-    # --- prompt-carousel ---
-    p = sub.add_parser("prompt-carousel",
-                       help="Generate carousel prompts (free)")
-    p.add_argument("--theme", required=True, help="Carousel theme")
-    p.add_argument("--style", required=True, help="Visual style (e.g. minimalist, bold)")
-    p.add_argument("--color-scheme", required=True, help="Color scheme (e.g. black and white)")
-    p.add_argument("--title", required=True, help="Carousel title or brand name")
-    p.add_argument("--count", type=int, default=None,
-                   help="Number of slides")
-    _add_dry_run(p)
-
     # --- config ---
     sub.add_parser("config", help="Show current configuration")
 
@@ -1515,10 +1356,6 @@ COMMAND_MAP = {
     "cancel-job": cmd_cancel_job,
     "account-info": cmd_account_info,
     "verify-key": cmd_verify_key,
-    "prompt-logo": cmd_prompt_logo,
-    "prompt-cover": cmd_prompt_cover,
-    "prompt-marketing": cmd_prompt_marketing,
-    "prompt-carousel": cmd_prompt_carousel,
     "config": cmd_config,
     "config-init": cmd_config_init,
     "spawn-task": cmd_spawn_task,
