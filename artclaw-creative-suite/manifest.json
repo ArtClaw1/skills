@@ -36,6 +36,13 @@
       "runtime": "python3",
       "dependencies": ["requests"],
       "credentials": "TELEGRAM_BOT_TOKEN 环境变量"
+    },
+    "artclaw": {
+      "path": "scripts/artclaw.py",
+      "description": "ArtClaw REST API CLI 客户端 — 支持全部 API 端点（生成/分析/工作流/Prompt），适合 Agent 异步调用。23 个子命令，JSON 输出，支持 --dry-run 和 spawn-task。",
+      "runtime": "python3",
+      "dependencies": ["requests"],
+      "credentials": "ARTCLAW_API_KEY 环境变量"
     }
   },
   "api": {
