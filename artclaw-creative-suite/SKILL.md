@@ -146,18 +146,24 @@ python3 scripts/artclaw.py verify-key --api-key "vk_your_key_here"
 ### 生成图片
 
 ```bash
-# 基本用法 — 提交并等待完成，返回完整结果 JSON
+# 基本用法 — 默认使用 --spawn，将任务派生给子 Agent 异步执行并自动投递结果
 python3 scripts/artclaw.py generate-image \
     --prompt "赛博朋克城市夜景，霓虹灯倒映在雨水中" \
-    --aspect-ratio 16:9
+    --aspect-ratio 16:9 \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 
 # 指定分辨率和参考图
 python3 scripts/artclaw.py generate-image \
     --prompt "同风格的山水画" \
     --resolution 2K \
-    --reference-urls https://example.com/style_ref.jpg
+    --reference-urls https://example.com/style_ref.jpg \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 
-# 不等待，立即返回 job_id
+# 不等待，立即返回 job_id（非 spawn 模式）
 python3 scripts/artclaw.py generate-image \
     --prompt "一只猫" --no-wait
 
@@ -182,16 +188,23 @@ python3 scripts/artclaw.py generate-image \
 ### 生成视频
 
 ```bash
+# 默认使用 --spawn，子 Agent 异步执行并自动投递
 python3 scripts/artclaw.py generate-video \
     --prompt "海浪拍打礁石，慢镜头" \
     --aspect-ratio 16:9 \
     --duration 5 \
-    --resolution 720p
+    --resolution 720p \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 
 # 图生视频（I2V）
 python3 scripts/artclaw.py generate-video \
     --prompt "让画面中的人物转头微笑" \
-    --reference-urls https://example.com/portrait.jpg
+    --reference-urls https://example.com/portrait.jpg \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 ```
 
 **参数：**
@@ -211,7 +224,10 @@ python3 scripts/artclaw.py generate-video \
 ```bash
 python3 scripts/artclaw.py generate-marketing-image \
     --prompt "夏日清凉饮品促销海报" \
-    --size 1080x1920
+    --size 1080x1920 \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 ```
 
 ### 工作流
@@ -220,10 +236,13 @@ python3 scripts/artclaw.py generate-marketing-image \
 # 列出所有可用工作流
 python3 scripts/artclaw.py list-workflows
 
-# 执行工作流
+# 执行工作流（默认 --spawn）
 python3 scripts/artclaw.py run-workflow \
     --workflow-id "text-to-image-basic" \
-    --inputs '{"prompt": "动漫风格的森林"}'
+    --inputs '{"prompt": "动漫风格的森林"}' \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 ```
 
 ### 多模态分析（同步返回）
@@ -385,7 +404,7 @@ TELEGRAM_BOT_TOKEN=<token> python3 scripts/telegram_send_video.py \
 
 ### OpenClaw Agent（推荐：spawn 模式）
 
-OpenClaw 原生支持 `sessions_spawn` 工具，可以将耗时任务派生给子 Agent 异步执行，主 Agent 不阻塞。
+OpenClaw 原生支持 `sessions_spawn` 工具，可以将耗时任务派生给子 Agent 异步执行，主 Agent 不阻塞。**所有生成类任务默认都应使用 `--spawn`。**
 
 **生成视频时：**
 
@@ -403,17 +422,18 @@ python3 scripts/artclaw.py generate-video \
 # 3. 子 Agent 在后台运行，完成后自动推送结果到飞书
 ```
 
-**生成图片时（时间短，也可直接运行）：**
+**生成图片时（默认同样使用 spawn）：**
 
 ```bash
-# 直接运行（~30s，主 Agent 内同步等待也可以接受）
-python3 scripts/artclaw.py generate-image --prompt "赛博朋克城市" --aspect-ratio 16:9
-
-# 或者 spawn 模式（与视频一致的处理方式）
-python3 scripts/artclaw.py generate-image --prompt "赛博朋克城市" --spawn --deliver-to ou_xxx --deliver-channel feishu
+python3 scripts/artclaw.py generate-image \
+    --prompt "赛博朋克城市" \
+    --aspect-ratio 16:9 \
+    --spawn \
+    --deliver-to ou_xxxxxx \
+    --deliver-channel feishu
 ```
 
-**工作流（时间不可控，强烈建议 spawn）：**
+**工作流（默认 spawn）：**
 
 ```bash
 python3 scripts/artclaw.py run-workflow \
@@ -547,4 +567,4 @@ while true; do
 done
 ```
 
-> **建议：** 直接使用 `python3 scripts/artclaw.py generate-image --prompt "赛博朋克城市夜景"` 可一步完成上述全部流程。
+> **建议：** 直接使用 `python3 scripts/artclaw.py generate-image --prompt "赛博朋克城市夜景" --spawn --deliver-to ou_xxxxxx --deliver-channel feishu` 可一步完成上述全部流程（默认 spawn 模式）。

@@ -1,67 +1,67 @@
 <p align="right">
-   <a href="./README.MD">简体中文</a> | <a href="./README.en.md">English</a>
+  <a href="./README.zh.md">简体中文</a> | <a href="./README.md">English</a>
 </p>
 
 # 🎨 ARTCLAW AI Creative Suite — OpenClaw Skill
 
-一站式 AI 内容创作 Skill，接入 [ARTCLAW](https://artclaw.com) 平台全套创作能力，支持 AI 生图、生视频、PPT 生成、多模态分析与工作流编排。
-
-English documentation: [README.en.md](./README.en.md)
+An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw.com) platform. It supports AI image generation, AI video generation, PPT creation, multimodal analysis, and workflow orchestration.
 
 ---
- 
-## ✨ 功能一览
 
-| 能力 | 描述 |
+## ✨ Features
+
+| Capability | Description |
 |------|------|
-| 🖼️ AI 生图 | 文生图、图生图、营销广告图、产品套图 |
-| 🎬 AI 生视频 | 文生视频、图生视频 |
-| 🔍 多模态分析 | 图片理解、视频分析、剧本分析、人物小传提炼 |
-| ⚡ 工作流 | 一键执行预设流程（动画 / 漫画 / 电商详情页等） |
-| ✏️ Prompt 工具 | Logo / 封面 / 营销图 / 轮播图提示词优化（免费，无需 Key） |
+| 🖼️ AI Image Generation | Text-to-image, image-to-image, marketing visuals, product image sets |
+| 🎬 AI Video Generation | Text-to-video, image-to-video |
+| 🔍 Multimodal Analysis | Image understanding, video analysis, script analysis, character profile extraction |
+| ⚡ Workflows | Run preset pipelines in one click (animation / comics / e-commerce detail page, etc.) |
+| ✏️ Prompt Tools | Prompt optimization for logos, covers, marketing images, and carousels (free, no API key required) |
 
 ---
 
-## 📦 在 OpenClaw/ClaudeCode/AnyAgent 上安装
+## 📦 Install on OpenClaw
 
-直接跟Agent说：
+Tell OpenClaw directly:
+
 ```text
-安装skill: https://github.com/ArtClaw1/artclaw-skill
+install skill: https://github.com/ArtClaw1/artclaw-skill
 ```
+
 ---
 
-## 🔑 配置 API Key
+## 🔑 Configure API Key
 
-本 Skill 的生成类功能需要 ARTCLAW API Key 进行鉴权。
+Generation features in this skill require an ARTCLAW API key.
 
-1. 访问 ARTCLAW 官网设置页：**https://artclaw.com/#/settings**
-2. 在 **API Keys** 区域点击「创建」，输入名称后复制生成的 Key（以 `vk_` 开头）
-3. 在 OpenClaw Skill 配置页中，将 Key 填入环境变量：
+1. Open the ARTCLAW settings page: **https://artclaw.com/#/settings**
+2. In the **API Keys** section, click "Create", enter a name, and copy the generated key (it starts with `vk_`)
+3. In the OpenClaw Skill configuration page, set the environment variable:
 
    ```
    ARTCLAW_API_KEY=vk_your_key_here
    ```
 
-> **注意：** Prompt 工具类功能无需 API Key，可免费直接使用。
+> **Note:** Prompt tool features are free to use and do not require an API key.
 
 ---
 
-## 🚀 快速上手
+## 🚀 Quick Start
 
-安装并配置完成后，在 OpenClaw 对话框中直接描述你的创作需求即可：
+After installation and configuration, describe your creative request directly in the OpenClaw chat:
 
-```
-帮我画一张赛博朋克风格的猫咪
+```text
+Help me create a cyberpunk-style cat illustration
 ```
 
-```
-用这张产品图生成一组电商轮播图
+```text
+Use this product image to generate an e-commerce carousel set
 ```
 
 ---
 
-## 📋 版本信息
+## 📋 Version
 
-- **版本：** 1.1.0
-- **作者：** ARTCLAW Team
-- **许可证：** MIT
+- **Version:** 1.1.0
+- **Author:** ARTCLAW Team
+- **License:** MIT
