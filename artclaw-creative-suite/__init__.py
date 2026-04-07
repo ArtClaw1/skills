@@ -39,11 +39,6 @@ ENDPOINTS = {
     "account_info": ("GET", "/account/info"),
     # 鉴权
     "verify_key": ("POST", "/auth/verify"),
-    # Prompt 工具（免费，无需 Key）
-    "prompt_logo": ("POST", "/prompts/logo"),
-    "prompt_cover": ("POST", "/prompts/cover"),
-    "prompt_marketing": ("POST", "/prompts/marketing"),
-    "prompt_carousel": ("POST", "/prompts/carousel"),
 }
 
 
