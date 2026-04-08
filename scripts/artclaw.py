@@ -38,7 +38,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 # Paths
-STATE_DIR = Path(os.path.expanduser("~/.openclaw/workspace/artclaw"))
+STATE_DIR = Path(os.path.expanduser("~/.artclaw"))
 CONFIG_FILE = STATE_DIR / "config.json"
 LAST_JOB_FILE = STATE_DIR / "last_job.json"
 HISTORY_DIR = STATE_DIR / "history"
