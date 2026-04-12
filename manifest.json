@@ -2,7 +2,7 @@
   "name": "artclaw-creative-suite",
   "version": "1.1.0",
   "displayName": "ARTCLAW AI Creative Suite",
-  "description": "通过 REST API 调用 ARTCLAW 平台的 AI 内容创作能力，支持 AI 生图、生视频、工作流执行、多模态分析等能力。",
+  "description": "Invoke ARTCLAW platform's AI content creation capabilities via REST API. Supports AI image generation, video generation, workflow execution, multimodal analysis, and more.",
   "author": {
     "name": "ARTCLAW Team",
     "url": "https://artclaw.com"
@@ -16,33 +16,33 @@
     "artclaw",
     "marketing",
     "creative",
-    "生成图片",
-    "生成视频",
-    "AI绘画"
+    "text-to-image",
+    "text-to-video",
+    "ai-painting"
   ],
   "skill": "SKILL.md",
   "main": "__init__.py",
   "scripts": {
     "feishu_send_video": {
       "path": "scripts/feishu_send_video.py",
-      "description": "通过飞书发送视频/图片消息（上传文件 → 获取 file_key → 发送 media 消息）",
+      "description": "Send video/image messages via Feishu (upload file → get file_key → send media message)",
       "runtime": "python3",
       "dependencies": ["requests"],
       "credentials": "~/.openclaw/openclaw.json → channels.feishu"
     },
     "telegram_send_video": {
       "path": "scripts/telegram_send_video.py",
-      "description": "通过 Telegram Bot API 发送视频消息（sendVideo，支持 thumbnail 和 caption）",
+      "description": "Send video messages via Telegram Bot API (sendVideo, supports thumbnail and caption)",
       "runtime": "python3",
       "dependencies": ["requests"],
-      "credentials": "TELEGRAM_BOT_TOKEN 环境变量"
+      "credentials": "TELEGRAM_BOT_TOKEN environment variable"
     },
     "artclaw": {
       "path": "scripts/artclaw.py",
-      "description": "ArtClaw REST API CLI 客户端 — 支持全部 API 端点（生成/分析/工作流/Prompt），适合 Agent 异步调用。23 个子命令，JSON 输出，支持 --dry-run 和 spawn-task。",
+      "description": "ArtClaw REST API CLI client — supports all API endpoints (generation/analysis/workflow/prompt), designed for async Agent invocation. 23 subcommands, JSON output, supports --dry-run and spawn-task.",
       "runtime": "python3",
       "dependencies": ["requests"],
-      "credentials": "ARTCLAW_API_KEY 环境变量"
+      "credentials": "ARTCLAW_API_KEY environment variable"
     }
   },
   "api": {
@@ -84,7 +84,7 @@
     "prefix": "vk_",
     "required": true,
     "helpUrl": "https://artclaw.com/#/settings",
-    "helpText": "在 ARTCLAW 官网 Settings > API Keys 中创建，Key 以 vk_ 开头",
+    "helpText": "Create an API Key in ARTCLAW Settings > API Keys. The key starts with vk_",
     "publicPaths": ["/api/v1/auth/verify"]
   },
   "metadata": {
@@ -101,18 +101,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ArtClaw1/skills",
+    "url": "https://github.com/ArtClaw1/artclaw-skill.git",
     "branch": "main"
   },
   "update": {
     "method": "tarball",
-    "url": "https://github.com/ArtClaw1/skills/archive/refs/heads/main.tar.gz"
+    "url": "https://github.com/ArtClaw1/artclaw-skill/archive/refs/heads/main.tar.gz"
   },
   "install": {
     "steps": [
-      "在 ARTCLAW 官网 https://artclaw.com/#/settings 创建 API Key（以 vk_ 开头）",
-      "在 HTTP 请求 Header 中添加 X-API-KEY: vk_your_key_here",
-      "调用 REST API 端点 https://artclaw.com/api/v1/*"
+      "Create an API Key at https://artclaw.com/#/settings (starts with vk_)",
+      "Add X-API-KEY: vk_your_key_here to the HTTP request header",
+      "Call REST API endpoints at https://artclaw.com/api/v1/*"
     ]
   }
 }

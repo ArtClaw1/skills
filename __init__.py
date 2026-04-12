@@ -19,25 +19,25 @@ API_CONFIG = {
 }
 
 ENDPOINTS = {
-    # 生成类（异步，返回 job_id）
+    # Generation (async, returns job_id)
     "generate_image": ("POST", "/generate/image"),
     "generate_video": ("POST", "/generate/video"),
     "generate_marketing_image": ("POST", "/generate/marketing-image"),
-    # 工作流
+    # Workflows
     "list_workflows": ("GET", "/workflows/"),
     "run_workflow": ("POST", "/workflows/{workflow_id}/run"),
-    # 分析类（同步返回）
+    # Analysis (synchronous)
     "analyze_image": ("POST", "/analyze/image"),
     "analyze_video": ("POST", "/analyze/video"),
     "analyze_script": ("POST", "/analyze/script"),
     "analyze_characters": ("POST", "/analyze/characters"),
-    # 任务管理
+    # Job management
     "get_job": ("GET", "/jobs/{job_id}"),
     "list_jobs": ("GET", "/jobs/"),
     "cancel_job": ("POST", "/jobs/{job_id}/cancel"),
-    # 账户
+    # Account
     "account_info": ("GET", "/account/info"),
-    # 鉴权
+    # Auth
     "verify_key": ("POST", "/auth/verify"),
 }
 

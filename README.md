@@ -1,7 +1,3 @@
-<p align="right">
-  <a href="./README.zh.md">简体中文</a> | <a href="./README.md">English</a>
-</p>
-
 # 🎨 ARTCLAW AI Creative Suite — OpenClaw Skill
 
 An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw.com) platform. It supports AI image generation, AI video generation, PPT creation, multimodal analysis, and workflow orchestration.
