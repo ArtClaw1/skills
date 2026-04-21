@@ -12,15 +12,12 @@ compatibility:
     - Python 3.8+ with requests package
 metadata:
   {
-    "openclaw":
+    'openclaw':
       {
-        "emoji": "🎨",
-        "requires":
-          {
-            "env": ["ARTCLAW_API_KEY"]
-          },
-        "primaryEnv": "ARTCLAW_API_KEY"
-      }
+        'emoji': '🎨',
+        'requires': { 'env': ['ARTCLAW_API_KEY'] },
+        'primaryEnv': 'ARTCLAW_API_KEY',
+      },
   }
 ---
 
@@ -30,9 +27,9 @@ ARTCLAW is an all-in-one AI content creation platform. The CLI tool `scripts/art
 
 > **⚠️ Mandatory Rule: All generation commands (generate-image / generate-video / generate-marketing-image / run-workflow) must be executed asynchronously. Blocking the main Agent is prohibited.**
 >
-> | Your Framework | Execution Method |
-> |---------|---------|
-> | Has `sessions_spawn` tool (e.g., OpenClaw) | Add `--spawn`, pass the output `sessions_spawn_args` to `sessions_spawn` |
+> | Your Framework                                                             | Execution Method                                                                 |
+> | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+> | Has `sessions_spawn` tool (e.g., OpenClaw)                                 | Add `--spawn`, pass the output `sessions_spawn_args` to `sessions_spawn`         |
 > | No `sessions_spawn` but has background task capability (e.g., Claude Code) | **Do not** add `--spawn`, use the framework's own background execution mechanism |
 
 ---
@@ -45,7 +42,7 @@ python3 scripts/artclaw.py verify-key
 
 - Returns `{"status": "valid"}` → proceed normally
 - Returns error or Key missing → **stop**, guide user to configure:
-  1. Go to https://artclaw.com/#/settings → API Keys section → click "Create"
+  1. Go to https://artclaw.com/settings → API Keys section → click "Create"
   2. Copy the generated Key (prefixed with `vk_`, shown only once)
   3. Configure: `python3 scripts/artclaw.py config-init --api-key "vk_xxx"`
 
@@ -73,13 +70,13 @@ python3 scripts/artclaw.py generate-image \
     --deliver-channel feishu
 ```
 
-| Parameter | Description | Values |
-|------|------|--------|
-| `--prompt` | Image description (required) | Text |
-| `--aspect-ratio` | Aspect ratio | `16:9` `9:16` `1:1` `4:3` `21:9` |
-| `--resolution` | Resolution | `1K` `2K` `4K` |
-| `--reference-urls` | Reference image URLs (multiple allowed) | URL list |
-| `--model` | Model override | Model ID |
+| Parameter          | Description                             | Values                           |
+| ------------------ | --------------------------------------- | -------------------------------- |
+| `--prompt`         | Image description (required)            | Text                             |
+| `--aspect-ratio`   | Aspect ratio                            | `16:9` `9:16` `1:1` `4:3` `21:9` |
+| `--resolution`     | Resolution                              | `1K` `2K` `4K`                   |
+| `--reference-urls` | Reference image URLs (multiple allowed) | URL list                         |
+| `--model`          | Model override                          | Model ID                         |
 
 ## 2. Generate Video
 
@@ -105,14 +102,14 @@ python3 scripts/artclaw.py generate-video \
     --deliver-channel feishu
 ```
 
-| Parameter | Description | Values |
-|------|------|--------|
-| `--prompt` | Video description (required) | Text |
-| `--aspect-ratio` | Aspect ratio | `16:9` `9:16` `1:1` `4:3` `21:9` |
-| `--duration` | Duration (seconds) | `2` - `12` |
-| `--resolution` | Resolution | `480p` `720p` `1080p` |
-| `--reference-urls` | Reference image URLs (I2V) | URL list |
-| `--model` | Model override | Model ID |
+| Parameter          | Description                  | Values                           |
+| ------------------ | ---------------------------- | -------------------------------- |
+| `--prompt`         | Video description (required) | Text                             |
+| `--aspect-ratio`   | Aspect ratio                 | `16:9` `9:16` `1:1` `4:3` `21:9` |
+| `--duration`       | Duration (seconds)           | `2` - `12`                       |
+| `--resolution`     | Resolution                   | `480p` `720p` `1080p`            |
+| `--reference-urls` | Reference image URLs (I2V)   | URL list                         |
+| `--model`          | Model override               | Model ID                         |
 
 ## 3. Generate Marketing Image
 
@@ -170,14 +167,14 @@ python3 scripts/artclaw.py analyze-characters \
 
 `--spawn` must be paired with `--deliver-to` and `--deliver-channel` to specify where to deliver the generated results. Background execution mode (Method B) does not need these two parameters.
 
-| Scenario | `--deliver-channel` | `--deliver-to` Value | Source |
-|------|--------------------|--------------------|------|
-| Feishu group chat | `feishu` | `oc_xxx` (chat_id) | `conversation_label` or `chat_id` from inbound metadata, strip `chat:` prefix |
-| Feishu direct message | `feishu` | `ou_xxx` (open_id) | `sender_id` from inbound metadata, strip `user:` prefix |
-| Telegram | `telegram` | `chat_id` | inbound message context |
-| Discord | `discord` | `channel_id` | inbound message context |
+| Scenario              | `--deliver-channel` | `--deliver-to` Value | Source                                                                        |
+| --------------------- | ------------------- | -------------------- | ----------------------------------------------------------------------------- |
+| Feishu group chat     | `feishu`            | `oc_xxx` (chat_id)   | `conversation_label` or `chat_id` from inbound metadata, strip `chat:` prefix |
+| Feishu direct message | `feishu`            | `ou_xxx` (open_id)   | `sender_id` from inbound metadata, strip `user:` prefix                       |
+| Telegram              | `telegram`          | `chat_id`            | inbound message context                                                       |
+| Discord               | `discord`           | `channel_id`         | inbound message context                                                       |
 
-**Feishu group chat vs. direct message:** Check `is_group_chat` in inbound metadata. `true` → use `oc_` (chat_id), `false` → use `ou_` (open_id).
+**Feishu group chat vs. direct message:** Check `is_group_chat` in inbound metadata. `true` → use `oc_` (chat*id), `false` → use `ou*` (open_id).
 
 ### Method A: Spawn Execution Flow (when `sessions_spawn` is available)
 
@@ -196,11 +193,11 @@ python3 scripts/artclaw.py analyze-characters \
 
 The delivery scripts for spawn sub-Agents require IM channel credentials (shared automatically on the same machine as the parent Agent):
 
-| Channel | Credential Source | Configuration |
-|------|---------|---------|
-| `feishu` | `~/.openclaw/openclaw.json` → `channels.feishu.accounts.main` | Set `appId` / `appSecret` |
-| `telegram` | Environment variable `TELEGRAM_BOT_TOKEN` | `export TELEGRAM_BOT_TOKEN=xxx` |
-| `discord` | Framework built-in (message tool) | No additional configuration needed |
+| Channel    | Credential Source                                             | Configuration                      |
+| ---------- | ------------------------------------------------------------- | ---------------------------------- |
+| `feishu`   | `~/.openclaw/openclaw.json` → `channels.feishu.accounts.main` | Set `appId` / `appSecret`          |
+| `telegram` | Environment variable `TELEGRAM_BOT_TOKEN`                     | `export TELEGRAM_BOT_TOKEN=xxx`    |
+| `discord`  | Framework built-in (message tool)                             | No additional configuration needed |
 
 ---
 
@@ -219,20 +216,20 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 
 ## 8. Quick Commands Reference
 
-| Command | Description | User-Facing |
-|------|------|---------|
-| `generate-image --spawn` | Text-to-image / Image-to-image | Yes |
-| `generate-video --spawn` | Text-to-video / Image-to-video | Yes |
-| `generate-marketing-image --spawn` | Marketing advertisement image | Yes |
-| `run-workflow --spawn` | Execute workflow | Yes |
-| `list-workflows` | List available workflows | Yes |
-| `analyze-image` / `analyze-video` | Multimodal analysis | Yes |
-| `analyze-script` / `analyze-characters` | Script / Character analysis | Yes |
-| `job-status` / `list-jobs` / `cancel-job` | Job management | Yes |
-| `account-info` | Check balance | Yes |
-| `last-job` / `history` | Local job history | Yes |
-| `verify-key` | Verify API Key | Setup only |
-| `config` / `config-init` | Configuration management | Setup only |
+| Command                                   | Description                    | User-Facing |
+| ----------------------------------------- | ------------------------------ | ----------- |
+| `generate-image --spawn`                  | Text-to-image / Image-to-image | Yes         |
+| `generate-video --spawn`                  | Text-to-video / Image-to-video | Yes         |
+| `generate-marketing-image --spawn`        | Marketing advertisement image  | Yes         |
+| `run-workflow --spawn`                    | Execute workflow               | Yes         |
+| `list-workflows`                          | List available workflows       | Yes         |
+| `analyze-image` / `analyze-video`         | Multimodal analysis            | Yes         |
+| `analyze-script` / `analyze-characters`   | Script / Character analysis    | Yes         |
+| `job-status` / `list-jobs` / `cancel-job` | Job management                 | Yes         |
+| `account-info`                            | Check balance                  | Yes         |
+| `last-job` / `history`                    | Local job history              | Yes         |
+| `verify-key`                              | Verify API Key                 | Setup only  |
+| `config` / `config-init`                  | Configuration management       | Setup only  |
 
 ---
 
@@ -241,20 +238,20 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 1. **Must be async** — Use `--spawn` if `sessions_spawn` is available, otherwise use framework background execution. Blocking the main Agent is prohibited
 2. **Reply to user immediately after submission** — "Submitted, generating...", do not wait silently
 3. **Use CLI, not curl** — `artclaw.py` already handles retry, polling, and error handling
-4. **Guide users to top up when credits are insufficient** — https://artclaw.com/#/settings
+4. **Guide users to top up when credits are insufficient** — https://artclaw.com/settings
 5. **Deliver results as native messages** — Use native video messages for videos, native image messages for images, do not just send URLs
 
 ---
 
 ## 10. Error Handling
 
-| Error | Cause | Resolution |
-|------|------|----------|
-| `401 Unauthorized` | API Key invalid/missing/revoked | Guide user to regenerate Key |
-| `402` / Insufficient credits | Account balance depleted | Guide to top up: https://artclaw.com/#/settings |
-| `404 Job not found` | job_id does not exist or has expired (24h) | Inform user the job has expired, please regenerate |
-| `404 Workflow not found` | Workflow does not exist | Run `list-workflows` first to confirm available IDs |
-| `429 Too Many Requests` | Rate limit exceeded (120 requests/minute) | Wait and retry |
+| Error                        | Cause                                      | Resolution                                          |
+| ---------------------------- | ------------------------------------------ | --------------------------------------------------- |
+| `401 Unauthorized`           | API Key invalid/missing/revoked            | Guide user to regenerate Key                        |
+| `402` / Insufficient credits | Account balance depleted                   | Guide to top up: https://artclaw.com/settings       |
+| `404 Job not found`          | job_id does not exist or has expired (24h) | Inform user the job has expired, please regenerate  |
+| `404 Workflow not found`     | Workflow does not exist                    | Run `list-workflows` first to confirm available IDs |
+| `429 Too Many Requests`      | Rate limit exceeded (120 requests/minute)  | Wait and retry                                      |
 
 ---
 

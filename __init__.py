@@ -6,7 +6,7 @@ multimodal analysis, and prompt enhancement.
 
 REST API Base: https://artclaw.com/api/v1
 Auth: API Key (starts with vk_) passed as `X-API-KEY` HTTP header
-Get your key: https://artclaw.com/#/settings
+Get your key: https://artclaw.com/settings
 """
 
 SKILL_NAME = "artclaw-creative-suite"

@@ -45,8 +45,8 @@ HISTORY_DIR = STATE_DIR / "history"
 
 # API
 DEFAULT_BASE_URL = "https://artclaw.com/api/v1"
-TOPUP_URL = "https://artclaw.com/#/settings"
-GET_KEY_URL = "https://artclaw.com/#/settings"
+TOPUP_URL = "https://artclaw.com/settings"
+GET_KEY_URL = "https://artclaw.com/settings"
 
 # Network
 CONNECT_TIMEOUT = 15   # seconds — TCP handshake

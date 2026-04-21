@@ -27,21 +27,27 @@
       "path": "scripts/feishu_send_video.py",
       "description": "Send video/image messages via Feishu (upload file → get file_key → send media message)",
       "runtime": "python3",
-      "dependencies": ["requests"],
+      "dependencies": [
+        "requests"
+      ],
       "credentials": "~/.openclaw/openclaw.json → channels.feishu"
     },
     "telegram_send_video": {
       "path": "scripts/telegram_send_video.py",
       "description": "Send video messages via Telegram Bot API (sendVideo, supports thumbnail and caption)",
       "runtime": "python3",
-      "dependencies": ["requests"],
+      "dependencies": [
+        "requests"
+      ],
       "credentials": "TELEGRAM_BOT_TOKEN environment variable"
     },
     "artclaw": {
       "path": "scripts/artclaw.py",
       "description": "ArtClaw REST API CLI client — supports all API endpoints (generation/analysis/workflow/prompt), designed for async Agent invocation. 23 subcommands, JSON output, supports --dry-run and spawn-task.",
       "runtime": "python3",
-      "dependencies": ["requests"],
+      "dependencies": [
+        "requests"
+      ],
       "credentials": "ARTCLAW_API_KEY environment variable"
     }
   },
@@ -50,30 +56,72 @@
     "transport": "http",
     "endpoints": {
       "generate": {
-        "image": { "method": "POST", "path": "/generate/image" },
-        "video": { "method": "POST", "path": "/generate/video" },
-        "marketing-image": { "method": "POST", "path": "/generate/marketing-image" }
+        "image": {
+          "method": "POST",
+          "path": "/generate/image"
+        },
+        "video": {
+          "method": "POST",
+          "path": "/generate/video"
+        },
+        "marketing-image": {
+          "method": "POST",
+          "path": "/generate/marketing-image"
+        }
       },
       "analyze": {
-        "image": { "method": "POST", "path": "/analyze/image" },
-        "video": { "method": "POST", "path": "/analyze/video" },
-        "script": { "method": "POST", "path": "/analyze/script" },
-        "characters": { "method": "POST", "path": "/analyze/characters" }
+        "image": {
+          "method": "POST",
+          "path": "/analyze/image"
+        },
+        "video": {
+          "method": "POST",
+          "path": "/analyze/video"
+        },
+        "script": {
+          "method": "POST",
+          "path": "/analyze/script"
+        },
+        "characters": {
+          "method": "POST",
+          "path": "/analyze/characters"
+        }
       },
       "workflows": {
-        "list": { "method": "GET", "path": "/workflows/" },
-        "run": { "method": "POST", "path": "/workflows/{workflow_id}/run" }
+        "list": {
+          "method": "GET",
+          "path": "/workflows/"
+        },
+        "run": {
+          "method": "POST",
+          "path": "/workflows/{workflow_id}/run"
+        }
       },
       "jobs": {
-        "get": { "method": "GET", "path": "/jobs/{job_id}" },
-        "list": { "method": "GET", "path": "/jobs/" },
-        "cancel": { "method": "POST", "path": "/jobs/{job_id}/cancel" }
+        "get": {
+          "method": "GET",
+          "path": "/jobs/{job_id}"
+        },
+        "list": {
+          "method": "GET",
+          "path": "/jobs/"
+        },
+        "cancel": {
+          "method": "POST",
+          "path": "/jobs/{job_id}/cancel"
+        }
       },
       "account": {
-        "info": { "method": "GET", "path": "/account/info" }
+        "info": {
+          "method": "GET",
+          "path": "/account/info"
+        }
       },
       "auth": {
-        "verify": { "method": "POST", "path": "/auth/verify" }
+        "verify": {
+          "method": "POST",
+          "path": "/auth/verify"
+        }
       }
     }
   },
@@ -83,15 +131,19 @@
     "paramLocation": "header",
     "prefix": "vk_",
     "required": true,
-    "helpUrl": "https://artclaw.com/#/settings",
+    "helpUrl": "https://artclaw.com/settings",
     "helpText": "Create an API Key in ARTCLAW Settings > API Keys. The key starts with vk_",
-    "publicPaths": ["/api/v1/auth/verify"]
+    "publicPaths": [
+      "/api/v1/auth/verify"
+    ]
   },
   "metadata": {
     "openclaw": {
       "emoji": "🎨",
       "requires": {
-        "env": ["ARTCLAW_API_KEY"]
+        "env": [
+          "ARTCLAW_API_KEY"
+        ]
       },
       "primaryEnv": "ARTCLAW_API_KEY",
       "envMapping": {
@@ -110,7 +162,7 @@
   },
   "install": {
     "steps": [
-      "Create an API Key at https://artclaw.com/#/settings (starts with vk_)",
+      "Create an API Key at https://artclaw.com/settings (starts with vk_)",
       "Add X-API-KEY: vk_your_key_here to the HTTP request header",
       "Call REST API endpoints at https://artclaw.com/api/v1/*"
     ]
