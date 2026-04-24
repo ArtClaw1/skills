@@ -32,6 +32,7 @@ import json
 import os
 import requests
 import sys
+import tempfile
 
 
 def get_feishu_credentials():
@@ -152,35 +153,149 @@ def send_media_message(token, to, file_key, image_key=None):
     return result["data"]["message_id"]
 
 
+def send_image_message(token, to, image_source):
+    """Send an image message via Feishu. image_source can be a local path or URL."""
+    # Download or read image data
+    if image_source.startswith("http"):
+        img_resp = requests.get(image_source, timeout=30)
+        img_resp.raise_for_status()
+        img_data = img_resp.content
+        filename = "image.jpg"
+    else:
+        with open(image_source, "rb") as f:
+            img_data = f.read()
+        filename = os.path.basename(image_source)
+
+    # Upload image to get image_key
+    resp = requests.post(
+        "https://open.feishu.cn/open-apis/im/v1/images",
+        headers={"Authorization": f"Bearer {token}"},
+        data={"image_type": "message"},
+        files={"image": (filename, img_data, "image/jpeg")},
+        timeout=(15, 60),
+    )
+    resp.raise_for_status()
+    result = resp.json()
+    if result.get("code") != 0:
+        raise Exception(f"Image upload failed: {result}")
+    image_key = result["data"]["image_key"]
+
+    # Send image message
+    content = {"image_key": image_key}
+
+    # Strip common prefixes from OpenClaw inbound metadata (e.g. "chat:oc_xxx" -> "oc_xxx")
+    if to.startswith("chat:"):
+        to = to[len("chat:"):]
+    elif to.startswith("user:"):
+        to = to[len("user:"):]
+
+    # Determine receive_id_type based on prefix
+    if to.startswith("oc_"):
+        receive_id_type = "chat_id"
+    else:
+        receive_id_type = "open_id"
+
+    resp = requests.post(
+        f"https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type={receive_id_type}",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={
+            "receive_id": to,
+            "msg_type": "image",
+            "content": json.dumps(content),
+        },
+        timeout=(15, 30),
+    )
+    resp.raise_for_status()
+    result = resp.json()
+    if result.get("code") != 0:
+        raise Exception(f"Send image failed: {result}")
+    return result["data"]["message_id"]
+
+
+def _download_to_temp(url, suffix):
+    """Download URL to a temporary file and return file path."""
+    resp = requests.get(url, timeout=(15, 120))
+    resp.raise_for_status()
+    fd, tmp_path = tempfile.mkstemp(prefix="artclaw_", suffix=suffix)
+    with os.fdopen(fd, "wb") as f:
+        f.write(resp.content)
+    return tmp_path
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Send video messages via Feishu")
-    parser.add_argument("--video", required=True, help="Video file path")
+    parser = argparse.ArgumentParser(
+        description="Send video or image messages via Feishu. "
+                    "Use --video for videos, --image for images."
+    )
+    parser.add_argument("--video", help="Video file path")
+    parser.add_argument("--video-url", help="Video URL (will be downloaded temporarily)")
+    parser.add_argument("--image", help="Image file path or URL")
     parser.add_argument("--to", required=True, help="Recipient open_id (ou_xxx) or group chat_id (oc_xxx)")
-    parser.add_argument("--cover", help="Cover image path or URL")
-    parser.add_argument("--cover-url", help="Cover image URL (alias for --cover)")
+    parser.add_argument("--cover", help="Cover image path or URL (for video)")
+    parser.add_argument("--cover-url", help="Cover image URL (alias for --cover, for video)")
     parser.add_argument("--duration", type=int, help="Video duration in milliseconds")
     args = parser.parse_args()
 
-    cover = args.cover or args.cover_url
+    if not args.video and not args.video_url and not args.image:
+        print(json.dumps({
+            "error": "Must provide one of --video, --video-url, or --image"
+        }), file=sys.stderr)
+        sys.exit(1)
+    if args.image and (args.video or args.video_url):
+        print(json.dumps({
+            "error": "Cannot specify --image together with video input"
+        }), file=sys.stderr)
+        sys.exit(1)
+    if args.video and args.video_url:
+        print(json.dumps({
+            "error": "Cannot specify both --video and --video-url"
+        }), file=sys.stderr)
+        sys.exit(1)
 
     token = get_tenant_token()
-    print(f"[feishu] Uploading video: {args.video}", file=sys.stderr)
-    file_key = upload_video(token, args.video, args.duration)
-    print(f"[feishu] Video file_key: {file_key}", file=sys.stderr)
 
-    image_key = None
-    if cover:
-        print(f"[feishu] Uploading cover: {cover}", file=sys.stderr)
-        image_key = upload_cover(token, cover)
-        print(f"[feishu] Cover image_key: {image_key}", file=sys.stderr)
+    if args.image:
+        print(f"[feishu] Sending image: {args.image}", file=sys.stderr)
+        msg_id = send_image_message(token, args.to, args.image)
+        print(json.dumps({
+            "status": "ok",
+            "type": "image",
+            "message_id": msg_id,
+        }))
+        return
 
-    msg_id = send_media_message(token, args.to, file_key, image_key)
-    print(json.dumps({
-        "status": "ok",
-        "message_id": msg_id,
-        "file_key": file_key,
-        "image_key": image_key,
-    }))
+    # Video path
+    temp_video_path = None
+    if args.video_url:
+        print(f"[feishu] Downloading video URL: {args.video_url}", file=sys.stderr)
+        temp_video_path = _download_to_temp(args.video_url, ".mp4")
+        video_path = temp_video_path
+    else:
+        video_path = args.video
+    cover = args.cover or args.cover_url
+
+    try:
+        print(f"[feishu] Uploading video: {video_path}", file=sys.stderr)
+        file_key = upload_video(token, video_path, args.duration)
+        print(f"[feishu] Video file_key: {file_key}", file=sys.stderr)
+
+        image_key = None
+        if cover:
+            print(f"[feishu] Uploading cover: {cover}", file=sys.stderr)
+            image_key = upload_cover(token, cover)
+            print(f"[feishu] Cover image_key: {image_key}", file=sys.stderr)
+
+        msg_id = send_media_message(token, args.to, file_key, image_key)
+        print(json.dumps({
+            "status": "ok",
+            "type": "video",
+            "message_id": msg_id,
+            "file_key": file_key,
+            "image_key": image_key,
+        }))
+    finally:
+        if temp_video_path and os.path.exists(temp_video_path):
+            os.remove(temp_video_path)
 
 
 if __name__ == "__main__":

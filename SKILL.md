@@ -75,7 +75,8 @@ python3 scripts/artclaw.py generate-image \
 | `--prompt`         | Image description (required)            | Text                             |
 | `--aspect-ratio`   | Aspect ratio                            | `16:9` `9:16` `1:1` `4:3` `21:9` |
 | `--resolution`     | Resolution                              | `1K` `2K` `4K`                   |
-| `--reference-urls` | Reference image URLs (multiple allowed) | URL list                         |
+| `--reference-urls` | Reference image URLs (multiple allowed) | URL list or base64 data URI |
+| `--reference-files` | Reference image files (local paths, auto-converted to base64) | File path list |
 | `--model`          | Model override                          | Model ID                         |
 
 ## 2. Generate Video
@@ -108,7 +109,8 @@ python3 scripts/artclaw.py generate-video \
 | `--aspect-ratio`   | Aspect ratio                 | `16:9` `9:16` `1:1` `4:3` `21:9` |
 | `--duration`       | Duration (seconds)           | `2` - `12`                       |
 | `--resolution`     | Resolution                   | `480p` `720p` `1080p`            |
-| `--reference-urls` | Reference image URLs (I2V)   | URL list                         |
+| `--reference-urls` | Reference image URLs (I2V)   | URL list or base64 data URI |
+| `--reference-files` | Reference image files (I2V, local paths auto-converted) | File path list |
 | `--model`          | Model override               | Model ID                         |
 
 ## 3. Generate Marketing Image

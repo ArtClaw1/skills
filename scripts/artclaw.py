@@ -14,6 +14,7 @@ All results output to stdout as JSON. Progress/diagnostics go to stderr.
 """
 
 import argparse
+import base64
 import json
 import os
 import sys
@@ -148,6 +149,28 @@ class ArtClawPollFailed(Exception):
 # ---------------------------------------------------------------------------
 # Section 3: Config / Credential Loading
 # ---------------------------------------------------------------------------
+
+def _file_to_base64(file_path: str) -> str:
+    """Convert local image file to base64 data URI."""
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Reference file not found: {file_path}")
+
+    # Determine MIME type from extension
+    ext = path.suffix.lower()
+    mime_map = {
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".png": "image/png", ".gif": "image/gif",
+        ".webp": "image/webp", ".bmp": "image/bmp"
+    }
+    mime_type = mime_map.get(ext, "image/jpeg")
+
+    # Read and encode
+    with open(path, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("ascii")
+
+    return f"data:{mime_type};base64,{encoded}"
+
 
 def _ensure_dir():
     STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -431,7 +454,7 @@ def api_generate_video(config: dict, prompt: str, *,
     if resolution:
         body["resolution"] = resolution
     if reference_urls:
-        body["reference_urls"] = reference_urls
+        body["content_items"] = [{"role": "reference_image", "url": u} for u in reference_urls]
     if model:
         body["model"] = model
     if callback_url:
@@ -600,7 +623,7 @@ def _validate_url(url: str):
     if not any(url.startswith(s) for s in ALLOWED_URL_SCHEMES):
         print(json.dumps({
             "error": f"Invalid URL scheme. Only http:// and https:// are allowed.",
-            "url": url,
+            "url": url[:100] + "..." if len(url) > 100 else url,
         }), file=sys.stderr)
         sys.exit(1)
 
@@ -684,36 +707,56 @@ def save_job_record(record: dict):
 # ---------------------------------------------------------------------------
 
 def _build_delivery_instructions(deliver_to: str, channel: str,
-                                 base_dir: str) -> str:
+                                 base_dir: str, subcommand: str) -> str:
     """Build channel-specific delivery instructions for spawn task."""
+    # Determine if this is image or video generation
+    is_image = subcommand in ("generate-image", "generate-marketing-image")
+
     if channel == "feishu":
-        return (
-            "  1. Download the result locally\n"
-            "  2. Send via Feishu:\n"
-            f"     python3 {base_dir}/scripts/feishu_send_video.py "
-            f"--video /tmp/artclaw_result.mp4 --to \"{deliver_to}\" "
-            "--cover-url \"<thumbnail_url>\" --duration <duration_ms>\n"
-            "     Note: duration is in milliseconds for Feishu"
-        )
+        if is_image:
+            return (
+                "  1. Send via Feishu directly with URL:\n"
+                f"     python3 {base_dir}/scripts/feishu_send_video.py "
+                f"--image \"<result_url>\" --to \"{deliver_to}\"\n"
+            )
+        else:  # video
+            return (
+                "  1. Send via Feishu:\n"
+                f"     python3 {base_dir}/scripts/feishu_send_video.py "
+                f"--video-url \"<result_url>\" --to \"{deliver_to}\" "
+                "--cover-url \"<thumbnail_url>\" --duration <duration_ms>\n"
+                "     Note: duration is in milliseconds for Feishu"
+            )
     if channel == "telegram":
-        return (
-            "  1. Download the result locally\n"
-            "  2. Send via Telegram:\n"
-            f"     TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN "
-            f"python3 {base_dir}/scripts/telegram_send_video.py "
-            f"--video /tmp/artclaw_result.mp4 --to \"{deliver_to}\" "
-            "--cover-url \"<thumbnail_url>\" --duration <duration_seconds> "
-            "--caption \"Result ready!\"\n"
-            "     Note: duration is in seconds for Telegram"
-        )
+        if is_image:
+            return (
+                "  1. Download the result locally (curl -o /tmp/artclaw_result.jpg \"<result_url>\")\n"
+                "  2. Send via Telegram:\n"
+                f"     TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN "
+                f"python3 {base_dir}/scripts/telegram_send_video.py "
+                f"--image /tmp/artclaw_result.jpg --to \"{deliver_to}\" "
+                "--caption \"Result ready!\"\n"
+            )
+        else:  # video
+            return (
+                "  1. Download the result locally (curl -o /tmp/artclaw_result.mp4 \"<result_url>\")\n"
+                "  2. Send via Telegram:\n"
+                f"     TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN "
+                f"python3 {base_dir}/scripts/telegram_send_video.py "
+                f"--video /tmp/artclaw_result.mp4 --to \"{deliver_to}\" "
+                "--cover-url \"<thumbnail_url>\" --duration <duration_seconds> "
+                "--caption \"Result ready!\"\n"
+                "     Note: duration is in seconds for Telegram"
+            )
     if channel == "discord":
+        media_file = "/tmp/artclaw_result.jpg" if is_image else "/tmp/artclaw_result.mp4"
         return (
-            "  1. Download the result locally:\n"
-            f"     curl -sL -o /tmp/artclaw_result.mp4 \"<result_url>\"\n"
+            f"  1. Download the result locally:\n"
+            f"     curl -sL -o {media_file} \"<result_url>\"\n"
             "  2. Use the message tool:\n"
             f"     message(action=\"send\", channel=\"discord\", "
             f"target=\"{deliver_to}\", message=\"Result ready!\", "
-            "filePath=\"/tmp/artclaw_result.mp4\")\n"
+            f"filePath=\"{media_file}\")\n"
             "     (25 MB limit; for larger files share URL as link)"
         )
     return (
@@ -762,7 +805,7 @@ def build_spawn_task(
     deliver_channel_str = deliver_channel or "feishu"
 
     delivery_instructions = _build_delivery_instructions(
-        deliver_to_str, deliver_channel_str, base_dir,
+        deliver_to_str, deliver_channel_str, base_dir, subcommand,
     )
 
     label_text = args_dict.get("prompt", subcommand)
@@ -796,6 +839,27 @@ def build_spawn_task(
     }
 
 
+def _should_spawn(args) -> bool:
+    """Infer spawn mode from args.
+
+    Spawn is enabled if:
+    - --spawn is explicitly provided, OR
+    - both --deliver-to and --deliver-channel are provided.
+    """
+    has_deliver_to = bool(getattr(args, "deliver_to", None))
+    has_deliver_channel = bool(getattr(args, "deliver_channel", None))
+
+    if has_deliver_to ^ has_deliver_channel:
+        print(json.dumps({
+            "error": "Both --deliver-to and --deliver-channel are required together",
+            "hint": "Provide both for async spawn delivery, or omit both for local execution",
+        }, indent=2, ensure_ascii=False), file=sys.stderr)
+        sys.exit(1)
+
+    return bool(getattr(args, "spawn", False) or
+                (has_deliver_to and has_deliver_channel))
+
+
 # ---------------------------------------------------------------------------
 # Section 9: CLI Command Handlers
 # ---------------------------------------------------------------------------
@@ -811,12 +875,15 @@ def cmd_generate_image(args, config: dict):
     api_kwargs.update(_collect_optional_args(args, [
         "aspect_ratio", "resolution", "model", "callback_url",
     ]))
-    if args.reference_urls:
-        api_kwargs["reference_urls"] = args.reference_urls
-        for url in args.reference_urls:
-            _validate_url(url)
 
-    if getattr(args, "spawn", False):
+    # Handle spawn mode differently: don't convert files to base64 yet
+    if _should_spawn(args):
+        # Pass reference URLs/files as-is to spawn task
+        if args.reference_urls:
+            api_kwargs["reference_urls"] = args.reference_urls
+        if getattr(args, "reference_files", None):
+            api_kwargs["reference_files"] = args.reference_files
+
         result = build_spawn_task(
             "generate-image", api_kwargs,
             deliver_to=getattr(args, "deliver_to", None),
@@ -824,6 +891,19 @@ def cmd_generate_image(args, config: dict):
         )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
+
+    # Non-spawn mode: convert reference_files to base64 now
+    reference_urls = list(args.reference_urls) if args.reference_urls else []
+    if getattr(args, "reference_files", None):
+        for file_path in args.reference_files:
+            _log(f"Converting local file to base64: {file_path}")
+            base64_uri = _file_to_base64(file_path)
+            reference_urls.append(base64_uri)
+
+    if reference_urls:
+        api_kwargs["reference_urls"] = reference_urls
+        for url in reference_urls:
+            _validate_url(url)
 
     result = submit_and_poll(
         config, "generate-image", api_generate_image, api_kwargs,
@@ -841,12 +921,15 @@ def cmd_generate_video(args, config: dict):
     api_kwargs.update(_collect_optional_args(args, [
         "aspect_ratio", "duration", "resolution", "model", "callback_url",
     ]))
-    if args.reference_urls:
-        api_kwargs["reference_urls"] = args.reference_urls
-        for url in args.reference_urls:
-            _validate_url(url)
 
-    if getattr(args, "spawn", False):
+    # Handle spawn mode differently: don't convert files to base64 yet
+    if _should_spawn(args):
+        # Pass reference URLs/files as-is to spawn task
+        if args.reference_urls:
+            api_kwargs["reference_urls"] = args.reference_urls
+        if getattr(args, "reference_files", None):
+            api_kwargs["reference_files"] = args.reference_files
+
         result = build_spawn_task(
             "generate-video", api_kwargs,
             deliver_to=getattr(args, "deliver_to", None),
@@ -854,6 +937,19 @@ def cmd_generate_video(args, config: dict):
         )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
+
+    # Non-spawn mode: convert reference_files to base64 now
+    reference_urls = list(args.reference_urls) if args.reference_urls else []
+    if getattr(args, "reference_files", None):
+        for file_path in args.reference_files:
+            _log(f"Converting local file to base64: {file_path}")
+            base64_uri = _file_to_base64(file_path)
+            reference_urls.append(base64_uri)
+
+    if reference_urls:
+        api_kwargs["reference_urls"] = reference_urls
+        for url in reference_urls:
+            _validate_url(url)
 
     result = submit_and_poll(
         config, "generate-video", api_generate_video, api_kwargs,
@@ -908,7 +1004,7 @@ def cmd_run_workflow(args, config: dict):
     }
     api_kwargs.update(_collect_optional_args(args, ["timeout", "callback_url"]))
 
-    if getattr(args, "spawn", False):
+    if _should_spawn(args):
         result = build_spawn_task(
             "run-workflow", api_kwargs,
             deliver_to=getattr(args, "deliver_to", None),
@@ -1165,7 +1261,9 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=sorted(VALID_RESOLUTIONS_IMAGE),
                    help="Resolution: 1K, 2K, 4K")
     p.add_argument("--reference-urls", nargs="+", default=None,
-                   help="Reference image URLs for style/content guidance")
+                   help="Reference images (HTTPS URLs or base64: data:image/png;base64,...)")
+    p.add_argument("--reference-files", nargs="+", default=None,
+                   help="Reference images (local file paths, auto-converted to base64)")
     p.add_argument("--model", default=None, help="Model ID override")
     p.add_argument("--spawn", action="store_true", default=False,
                    help="Output sessions_spawn_args payload instead of running directly")
@@ -1188,7 +1286,9 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=sorted(VALID_RESOLUTIONS_VIDEO),
                    help="Resolution: 480p, 720p, 1080p")
     p.add_argument("--reference-urls", nargs="+", default=None,
-                   help="Reference image URLs (for image-to-video)")
+                   help="Reference images for I2V (HTTPS URLs or base64)")
+    p.add_argument("--reference-files", nargs="+", default=None,
+                   help="Reference images for I2V (local file paths, auto-converted to base64)")
     p.add_argument("--model", default=None, help="Model ID override")
     p.add_argument("--spawn", action="store_true", default=False,
                    help="Output sessions_spawn_args payload instead of running directly")

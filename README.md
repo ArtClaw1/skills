@@ -6,13 +6,13 @@ An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw
 
 ## ✨ Features
 
-| Capability             | Description                                                                                        |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| 🖼️ AI Image Generation | Text-to-image, image-to-image, marketing visuals, product image sets                               |
-| 🎬 AI Video Generation | Text-to-video, image-to-video                                                                      |
-| 🔍 Multimodal Analysis | Image understanding, video analysis, script analysis, character profile extraction                 |
-| ⚡ Workflows           | Run preset pipelines in one click (animation / comics / e-commerce detail page, etc.)              |
-| ✏️ Prompt Tools        | Prompt optimization for logos, covers, marketing images, and carousels (free, no API key required) |
+| Capability | Description |
+|------|------|
+| 🖼️ AI Image Generation | Text-to-image, image-to-image, marketing visuals, product image sets |
+| 🎬 AI Video Generation | Text-to-video, image-to-video |
+| 🔍 Multimodal Analysis | Image understanding, video analysis, script analysis, character profile extraction |
+| ⚡ Workflows | Run preset pipelines in one click (animation / comics / e-commerce detail page, etc.) |
+| ✏️ Prompt Tools | Prompt optimization for logos, covers, marketing images, and carousels (free, no API key required) |
 
 ---
 
@@ -30,7 +30,7 @@ install skill: https://github.com/ArtClaw1/artclaw-skill
 
 Generation features in this skill require an ARTCLAW API key.
 
-1. Open the ARTCLAW settings page: **https://artclaw.com/settings**
+1. Open the ARTCLAW settings page: **https://artclaw.com/#/settings**
 2. In the **API Keys** section, click "Create", enter a name, and copy the generated key (it starts with `vk_`)
 3. In the OpenClaw Skill configuration page, set the environment variable:
 
