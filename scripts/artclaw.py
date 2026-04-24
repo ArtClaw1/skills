@@ -49,6 +49,15 @@ DEFAULT_BASE_URL = "https://artclaw.com/api/v1"
 TOPUP_URL = "https://artclaw.com/settings"
 GET_KEY_URL = "https://artclaw.com/settings"
 
+# Self-update
+GITHUB_REPO_URL = "https://github.com/ArtClaw1/artclaw-skill"
+GITHUB_RAW_SCRIPT_URL = (
+    "https://raw.githubusercontent.com/ArtClaw1/artclaw-skill/main/scripts/artclaw.py"
+)
+GITHUB_ARCHIVE_URL = (
+    "https://github.com/ArtClaw1/artclaw-skill/archive/refs/heads/main.zip"
+)
+
 # Network
 CONNECT_TIMEOUT = 15   # seconds — TCP handshake
 READ_TIMEOUT = 60      # seconds — wait for response body
@@ -1182,6 +1191,157 @@ def cmd_spawn_task(args, config: dict):
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
+# --- Self-update ---
+
+def _repo_root() -> Path:
+    """Return the root directory of the artclaw-skill repo.
+
+    Assumes this script lives at <repo_root>/scripts/artclaw.py.
+    """
+    return Path(__file__).resolve().parent.parent
+
+
+def _apply_archive(archive_zip_bytes: bytes, repo_root: Path, *,
+                   dry_run: bool = False) -> dict:
+    """Extract a GitHub main.zip archive over repo_root.
+
+    The zip contains a single top-level directory (e.g. artclaw-skill-main/).
+    We strip that prefix and merge the contents into repo_root.
+
+    Returns a summary dict with lists of added/modified/deleted files.
+    """
+    import io
+    import zipfile
+    import shutil
+    import tempfile
+
+    with zipfile.ZipFile(io.BytesIO(archive_zip_bytes)) as zf:
+        names = zf.namelist()
+
+    # Determine the top-level prefix to strip (e.g. "artclaw-skill-main/")
+    prefix = names[0] if names[0].endswith("/") else names[0].split("/")[0] + "/"
+
+    # Collect incoming file paths (relative to repo_root) and their content
+    incoming: Dict[str, bytes] = {}
+    with zipfile.ZipFile(io.BytesIO(archive_zip_bytes)) as zf:
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            rel = info.filename
+            if not rel.startswith(prefix):
+                continue
+            rel_path = rel[len(prefix):]  # strip top-level dir prefix
+            if not rel_path:
+                continue
+            incoming[rel_path] = zf.read(info.filename)
+
+    # Collect existing files under repo_root
+    existing: set = set()
+    for p in repo_root.rglob("*"):
+        if p.is_file():
+            existing.add(str(p.relative_to(repo_root)))
+
+    added, modified, unchanged = [], [], []
+    for rel_path, new_bytes in sorted(incoming.items()):
+        dest = repo_root / rel_path
+        if not dest.exists():
+            added.append(rel_path)
+        else:
+            try:
+                old_bytes = dest.read_bytes()
+            except IOError:
+                old_bytes = b""
+            if old_bytes != new_bytes:
+                modified.append(rel_path)
+            else:
+                unchanged.append(rel_path)
+
+    # Files in existing but not in incoming are untouched (we never delete)
+    # unless --delete is someday added.
+
+    if dry_run:
+        return {
+            "status": "dry_run",
+            "added": added,
+            "modified": modified,
+            "unchanged_count": len(unchanged),
+        }
+
+    # Write new/modified files atomically via temp file + rename
+    for rel_path in added + modified:
+        dest = repo_root / rel_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=dest.parent,
+                                            prefix=".artclaw_upd_")
+        try:
+            with os.fdopen(tmp_fd, "wb") as f:
+                f.write(incoming[rel_path])
+            if dest.exists():
+                shutil.copymode(str(dest), tmp_path)
+            os.replace(tmp_path, str(dest))
+        except OSError as e:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise OSError(f"Failed to write {dest}: {e}") from e
+
+    return {
+        "status": "updated",
+        "added": added,
+        "modified": modified,
+        "unchanged_count": len(unchanged),
+    }
+
+
+def cmd_self_update(args, config: dict):
+    """Update the entire artclaw-skill repo from GitHub (downloads archive ZIP)."""
+    dry_run = getattr(args, "dry_run", False)
+    repo_root = _repo_root()
+
+    _log(f"Downloading archive from {GITHUB_ARCHIVE_URL} ...")
+    _log(f"Repo root: {repo_root}")
+
+    try:
+        resp = requests.get(
+            GITHUB_ARCHIVE_URL,
+            timeout=(CONNECT_TIMEOUT, 120),
+            stream=False,
+        )
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        print(json.dumps({
+            "error": f"Failed to download archive: {e}",
+            "url": GITHUB_ARCHIVE_URL,
+        }, indent=2), file=sys.stderr)
+        sys.exit(1)
+
+    _log(f"Downloaded {len(resp.content):,} bytes. Applying update...")
+
+    try:
+        summary = _apply_archive(resp.content, repo_root, dry_run=dry_run)
+    except OSError as e:
+        print(json.dumps({"error": str(e)}, indent=2), file=sys.stderr)
+        sys.exit(1)
+
+    if not summary["added"] and not summary["modified"]:
+        summary["message"] = "Already up to date. No files changed."
+    else:
+        n_add = len(summary["added"])
+        n_mod = len(summary["modified"])
+        parts = []
+        if n_add:
+            parts.append(f"{n_add} added")
+        if n_mod:
+            parts.append(f"{n_mod} modified")
+        action = "Would update" if dry_run else "Updated"
+        summary["message"] = f"{action}: {', '.join(parts)}."
+
+    summary["repo_root"] = str(repo_root)
+    summary["source"] = GITHUB_ARCHIVE_URL
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+
+
 # --- History commands ---
 
 def cmd_last_job(args, config: dict):
@@ -1434,6 +1594,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--limit", type=int, default=20,
                    help="Number of records to show")
 
+    # --- self-update ---
+    p = sub.add_parser("self-update",
+                       help="Update the entire artclaw-skill repo from GitHub")
+    _add_dry_run(p)
+
     return parser
 
 
@@ -1461,6 +1626,7 @@ COMMAND_MAP = {
     "spawn-task": cmd_spawn_task,
     "last-job": cmd_last_job,
     "history": cmd_history,
+    "self-update": cmd_self_update,
 }
 
 
