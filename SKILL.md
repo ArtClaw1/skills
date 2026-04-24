@@ -216,7 +216,27 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 
 ---
 
-## 8. Quick Commands Reference
+## 8. Self-Update
+
+Keep the skill up to date by pulling the latest version from GitHub:
+
+```bash
+# Update the entire repo (recommended)
+python3 scripts/artclaw.py self-update
+
+# Preview what would change without writing anything
+python3 scripts/artclaw.py self-update --dry-run
+```
+
+- Downloads `https://github.com/ArtClaw1/artclaw-skill/archive/refs/heads/main.zip`
+- Atomically applies added / modified files to the local repo root
+- Reports a JSON summary: `added`, `modified`, `unchanged_count`
+- Does **not** delete local-only files
+- No git installation required
+
+---
+
+## 9. Quick Commands Reference
 
 | Command                                   | Description                    | User-Facing |
 | ----------------------------------------- | ------------------------------ | ----------- |
@@ -230,12 +250,13 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 | `job-status` / `list-jobs` / `cancel-job` | Job management                 | Yes         |
 | `account-info`                            | Check balance                  | Yes         |
 | `last-job` / `history`                    | Local job history              | Yes         |
+| `self-update`                             | Update skill from GitHub       | Maintenance |
 | `verify-key`                              | Verify API Key                 | Setup only  |
 | `config` / `config-init`                  | Configuration management       | Setup only  |
 
 ---
 
-## 9. Key Rules
+## 11. Key Rules
 
 1. **Must be async** — Use `--spawn` if `sessions_spawn` is available, otherwise use framework background execution. Blocking the main Agent is prohibited
 2. **Reply to user immediately after submission** — "Submitted, generating...", do not wait silently
@@ -245,7 +266,7 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 
 ---
 
-## 10. Error Handling
+## 12. Error Handling
 
 | Error                        | Cause                                      | Resolution                                          |
 | ---------------------------- | ------------------------------------------ | --------------------------------------------------- |
@@ -257,6 +278,6 @@ python3 scripts/artclaw.py history --limit 50                     # Local histor
 
 ---
 
-## 11. Data Storage
+## 13. Data Storage
 
 All data is stored in `~/.artclaw/`: `config.json` (API Key), `last_job.json` (latest job), `history/` (history records).
