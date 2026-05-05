@@ -32,7 +32,7 @@ ARTCLAW is an all-in-one AI content creation platform. This skill uses `scripts/
 3. Run the pre-flight API key check before authenticated operations.
 4. Never mix execution rules from multiple adapters.
 
-If platform detection is ambiguous, ask the user which platform they are using. If the platform is unsupported, use `docs/adapters/generic.md`.
+If platform detection is ambiguous, ask the user which platform they are using. If the platform is unsupported, use `docs/adapters/others.md`.
 
 ## Platform Adapter Map
 
@@ -41,7 +41,7 @@ If platform detection is ambiguous, ask the user which platform they are using. 
 | OpenClaw | `docs/adapters/openclaw.md` |
 | Claude Code | `docs/adapters/claude-code.md` |
 | Hermes Agent | `docs/adapters/hermes.md` |
-| Unknown / unsupported platform | `docs/adapters/generic.md` |
+| Unknown / unsupported platform | `docs/adapters/others.md` |
 
 ## Universal Rules
 
