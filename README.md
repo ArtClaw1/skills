@@ -1,6 +1,6 @@
 # 🎨 ARTCLAW AI Creative Suite — OpenClaw Skill
 
-An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw.com) platform. It supports AI image generation, AI video generation, PPT creation, multimodal analysis, and workflow orchestration.
+An all-in-one AI content creation skill powered by the [ARTCLAW](https://artclaw.com/) platform. It supports AI image generation, AI video generation, PPT creation, multimodal analysis, and workflow orchestration.
 
 ---
 
