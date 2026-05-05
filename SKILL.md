@@ -1,11 +1,11 @@
 ---
 name: artclaw-creative-suite
 description: |
-  ARTCLAW AI Creative Suite — invoke ARTCLAW platform's AI content creation capabilities via CLI.
-  Supports AI image generation, video generation, workflow execution, multimodal analysis, and more.
-  All generation commands must be executed asynchronously (spawn or background). Requires an API Key (prefixed with vk_) for authentication.
+  ARTCLAW AI Creative Suite - invoke ARTCLAW platform's AI content creation capabilities via CLI.
+  Supports AI image generation, video generation, workflow execution, multimodal analysis, and job management.
+  All generation commands must run asynchronously using the current platform adapter. Requires an API Key prefixed with vk_ for authenticated features.
   Trigger keywords: generate image, generate video, AI painting, text-to-image, text-to-video, image-to-video, marketing image,
-  Logo, cover, workflow, video analysis, image analysis, ARTCLAW, ArtClaw.
+  logo, cover, workflow, video analysis, image analysis, ARTCLAW, ArtClaw.
 compatibility:
   dependencies:
     - ARTCLAW REST API (https://artclaw.com/api/v1)
@@ -23,261 +23,260 @@ metadata:
 
 # ARTCLAW AI Creative Suite
 
-ARTCLAW is an all-in-one AI content creation platform. The CLI tool `scripts/artclaw.py` wraps the complete API interaction (authentication, submission, polling, retry) and outputs standard JSON.
+ARTCLAW is an all-in-one AI content creation platform. This skill uses `scripts/artclaw.py` as the single CLI entry point for authentication, submission, polling, retry, history, and JSON output.
 
-> **⚠️ Mandatory Rule: All generation commands (generate-image / generate-video / generate-marketing-image / run-workflow) must be executed asynchronously. Blocking the main Agent is prohibited.**
->
-> | Your Framework                                                             | Execution Method                                                                 |
-> | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-> | Has `sessions_spawn` tool (e.g., OpenClaw)                                 | Add `--spawn`, pass the output `sessions_spawn_args` to `sessions_spawn`         |
-> | No `sessions_spawn` but has background task capability (e.g., Claude Code) | **Do not** add `--spawn`, use the framework's own background execution mechanism |
+## Mandatory Startup Flow
+
+1. Detect the current agent platform.
+2. Read exactly one matching adapter document from `docs/adapters/` before running generation or workflow commands.
+3. Run the pre-flight API key check before authenticated operations.
+4. Never mix execution rules from multiple adapters.
+
+If platform detection is ambiguous, ask the user which platform they are using. If the platform is unsupported, use `docs/adapters/generic.md`.
+
+## Platform Adapter Map
+
+| Platform | Adapter document |
+| --- | --- |
+| OpenClaw | `docs/adapters/openclaw.md` |
+| Claude Code | `docs/adapters/claude-code.md` |
+| Hermes Agent | `docs/adapters/hermes.md` |
+| Unknown / unsupported platform | `docs/adapters/generic.md` |
+
+## Universal Rules
+
+1. Use the CLI, not raw curl: `python3 scripts/artclaw.py ...`.
+2. Run `python3 scripts/artclaw.py verify-key` before authenticated operations.
+3. Generation and workflow commands are long-running and must not block the main agent silently.
+4. In Claude Code, prefer Bash `run_in_background: true` so `/tasks` can track the local background task. **DO NOT manually poll with `job-status` after the background task completes** — the background task already polls internally and returns the final result in its output.
+5. In non-spawn platforms, use `--no-wait` by default unless the selected adapter explicitly defines a different async strategy or the user explicitly asks the agent to wait.
+6. In OpenClaw-compatible spawn platforms, use `--spawn` instead of `--no-wait`.
+7. Immediately tell the user after a generation/workflow job is submitted or a background task is started.
+8. Analysis commands are synchronous and do not require spawn/background execution.
+9. Guide users to https://artclaw.com/settings for API key creation and credit top-up.
+10. Deliver generated media as native platform messages when the adapter supports it; otherwise return the result URL and job metadata.
+11. Platform-specific async behavior, delivery semantics, and anti-blocking rules must be defined only in the selected adapter document under `docs/adapters/` and followed strictly.
 
 ---
 
-## 0. Pre-Flight Check (Execute at the start of every conversation)
+## API Key & Account
+
+Run this before authenticated operations:
 
 ```bash
 python3 scripts/artclaw.py verify-key
 ```
 
-- Returns `{"status": "valid"}` → proceed normally
-- Returns error or Key missing → **stop**, guide user to configure:
-  1. Go to https://artclaw.com/settings → API Keys section → click "Create"
-  2. Copy the generated Key (prefixed with `vk_`, shown only once)
-  3. Configure: `python3 scripts/artclaw.py config-init --api-key "vk_xxx"`
+- `{"status": "valid"}`: continue.
+- Missing, invalid, or revoked key: stop and guide the user to configure a key.
+
+Setup:
+
+1. Open https://artclaw.com/settings.
+2. Create an API key in the API Keys section.
+3. Copy the generated key. It is prefixed with `vk_` and is shown only once.
+4. Configure locally:
+
+```bash
+python3 scripts/artclaw.py config-init --api-key "vk_xxx"
+```
+
+Useful account commands:
+
+```bash
+python3 scripts/artclaw.py account-info
+python3 scripts/artclaw.py config
+```
+
+All local ARTCLAW data is stored under `~/.artclaw/`, including `config.json`, `last_job.json`, and `history/`.
 
 ---
 
-## 1. Generate Image
+## Generation Commands
+
+Generation and workflow commands are long-running. Always follow the current platform adapter before choosing `--spawn`, Claude Code `run_in_background`, `--no-wait`, or explicit waiting.
+
+Safe default:
+
+- OpenClaw-compatible adapters use `--spawn`.
+- Claude Code uses Bash `run_in_background: true` when available.
+- Other non-spawn adapters use `--no-wait` — unless the adapter defines its own background strategy (e.g. Hermes uses background terminal; see adapter doc).
+- Only omit both when the user explicitly asks the agent to wait for completion.
+
+### Generate Image
 
 ```bash
 python3 scripts/artclaw.py generate-image \
-    --prompt "Cyberpunk cityscape at night, neon lights reflected in rainwater" \
-    --aspect-ratio 16:9 \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --prompt "Cyberpunk cityscape at night, neon lights reflected in rainwater" \
+  --aspect-ratio 16:9 \
+  --no-wait
 ```
 
-With reference image (image-to-image):
+With references:
 
 ```bash
 python3 scripts/artclaw.py generate-image \
-    --prompt "Landscape painting in the same style" \
-    --reference-urls https://example.com/style_ref.jpg \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --prompt "Landscape painting in the same style" \
+  --reference-urls https://example.com/style_ref.jpg \
+  --no-wait
 ```
 
-| Parameter          | Description                             | Values                           |
-| ------------------ | --------------------------------------- | -------------------------------- |
-| `--prompt`         | Image description (required)            | Text                             |
-| `--aspect-ratio`   | Aspect ratio                            | `16:9` `9:16` `1:1` `4:3` `21:9` |
-| `--resolution`     | Resolution                              | `1K` `2K` `4K`                   |
-| `--reference-urls` | Reference image URLs (multiple allowed) | URL list or base64 data URI |
-| `--reference-files` | Reference image files (local paths, auto-converted to base64) | File path list |
-| `--model`          | Model override                          | Model ID                         |
+| Parameter | Description | Values |
+| --- | --- | --- |
+| `--prompt` | Image description, required | Text |
+| `--aspect-ratio` | Aspect ratio | `16:9`, `9:16`, `1:1`, `4:3`, `21:9` |
+| `--resolution` | Resolution | `1K`, `2K`, `4K` |
+| `--reference-urls` | Reference image URLs or base64 data URIs | One or more values |
+| `--reference-files` | Local reference files, auto-converted to base64 | One or more paths |
+| `--model` | Model override | Model ID |
 
-## 2. Generate Video
+### Generate Video
 
 ```bash
 python3 scripts/artclaw.py generate-video \
-    --prompt "Waves crashing on rocks, slow motion" \
-    --aspect-ratio 16:9 \
-    --duration 5 \
-    --resolution 720p \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --prompt "Waves crashing on rocks, slow motion" \
+  --aspect-ratio 16:9 \
+  --duration 5 \
+  --resolution 720p \
+  --no-wait
 ```
 
-Image-to-video (I2V):
+Image-to-video:
 
 ```bash
 python3 scripts/artclaw.py generate-video \
-    --prompt "Make the person in the frame turn their head and smile" \
-    --reference-urls https://example.com/portrait.jpg \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --prompt "Make the person in the frame turn their head and smile" \
+  --reference-urls https://example.com/portrait.jpg \
+  --no-wait
 ```
 
-| Parameter          | Description                  | Values                           |
-| ------------------ | ---------------------------- | -------------------------------- |
-| `--prompt`         | Video description (required) | Text                             |
-| `--aspect-ratio`   | Aspect ratio                 | `16:9` `9:16` `1:1` `4:3` `21:9` |
-| `--duration`       | Duration (seconds)           | `2` - `12`                       |
-| `--resolution`     | Resolution                   | `480p` `720p` `1080p`            |
-| `--reference-urls` | Reference image URLs (I2V)   | URL list or base64 data URI |
-| `--reference-files` | Reference image files (I2V, local paths auto-converted) | File path list |
-| `--model`          | Model override               | Model ID                         |
+| Parameter | Description | Values |
+| --- | --- | --- |
+| `--prompt` | Video description, required | Text |
+| `--aspect-ratio` | Aspect ratio | `16:9`, `9:16`, `1:1`, `4:3`, `21:9` |
+| `--duration` | Duration in seconds | `2` - `12` |
+| `--resolution` | Resolution | `480p`, `720p`, `1080p` |
+| `--reference-urls` | Reference image URLs or base64 data URIs | One or more values |
+| `--reference-files` | Local reference image files, auto-converted | One or more paths |
+| `--model` | Model override | Model ID |
 
-## 3. Generate Marketing Image
+### Generate Marketing Image
 
 ```bash
 python3 scripts/artclaw.py generate-marketing-image \
-    --prompt "Summer cool drinks promotional poster" \
-    --size 1080x1920 \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --prompt "Summer cool drinks promotional poster" \
+  --size 1080x1920 \
+  --no-wait
 ```
 
-## 4. Execute Workflow
+### Execute Workflow
 
 ```bash
-# List available workflows
 python3 scripts/artclaw.py list-workflows
+```
 
-# Execute a workflow
+```bash
 python3 scripts/artclaw.py run-workflow \
-    --workflow-id "text-to-image-basic" \
-    --inputs '{"prompt": "Anime-style forest"}' \
-    --spawn \
-    --deliver-to ou_xxxxxx \
-    --deliver-channel feishu
+  --workflow-id "text-to-image-basic" \
+  --inputs '{"prompt": "Anime-style forest"}' \
+  --no-wait
 ```
 
-## 5. Multimodal Analysis (Synchronous, no spawn needed)
+Replace `--no-wait` with `--spawn`, `--deliver-to`, and `--deliver-channel` only when the current platform adapter says to do so.
 
-Analysis commands return results directly without `--spawn`.
+---
+
+## Analysis Commands
+
+Analysis commands are synchronous. They do not require `--spawn` or background execution.
+
+### Image Analysis
 
 ```bash
-# Image analysis
 python3 scripts/artclaw.py analyze-image \
-    --reference-urls https://example.com/photo.jpg \
-    --query "Describe the main content of this image"
+  --reference-urls https://example.com/photo.jpg \
+  --query "Describe the main content of this image"
+```
 
-# Video analysis
+### Video Analysis
+
+```bash
 python3 scripts/artclaw.py analyze-video \
-    --reference-urls https://example.com/clip.mp4 \
-    --query "Summarize the video content"
+  --reference-urls https://example.com/clip.mp4 \
+  --query "Summarize the video content"
+```
 
-# Script extraction
+### Script Extraction
+
+```bash
 python3 scripts/artclaw.py analyze-script \
-    --reference-paths https://example.com/drama.mp4
+  --reference-paths https://example.com/drama.mp4
+```
 
-# Character profiles
+### Character Profiles
+
+```bash
 python3 scripts/artclaw.py analyze-characters \
-    --text "Li Ming is an introverted but brilliant programmer..."
+  --text "Li Ming is an introverted but brilliant programmer..."
 ```
 
 ---
 
-## 6. Delivery Target (`--deliver-to`)
-
-`--spawn` must be paired with `--deliver-to` and `--deliver-channel` to specify where to deliver the generated results. Background execution mode (Method B) does not need these two parameters.
-
-| Scenario              | `--deliver-channel` | `--deliver-to` Value | Source                                                                        |
-| --------------------- | ------------------- | -------------------- | ----------------------------------------------------------------------------- |
-| Feishu group chat     | `feishu`            | `oc_xxx` (chat_id)   | `conversation_label` or `chat_id` from inbound metadata, strip `chat:` prefix |
-| Feishu direct message | `feishu`            | `ou_xxx` (open_id)   | `sender_id` from inbound metadata, strip `user:` prefix                       |
-| Telegram              | `telegram`          | `chat_id`            | inbound message context                                                       |
-| Discord               | `discord`           | `channel_id`         | inbound message context                                                       |
-
-**Feishu group chat vs. direct message:** Check `is_group_chat` in inbound metadata. `true` → use `oc_` (chat*id), `false` → use `ou*` (open_id).
-
-### Method A: Spawn Execution Flow (when `sessions_spawn` is available)
-
-1. Main Agent runs `artclaw.py generate-xxx --spawn ...` → output JSON contains `sessions_spawn_args`
-2. Main Agent passes `sessions_spawn_args` to the `sessions_spawn` tool → returns immediately
-3. **Immediately notify the user**: "Submitted, generating..." (do not wait silently)
-4. Sub-Agent executes generation in the background + automatically delivers results to the specified channel
-
-### Method B: Background Execution (without `sessions_spawn`, e.g., Claude Code)
-
-1. Use the framework's background execution capability to run the command (e.g., `Bash(run_in_background: true)`), **without** `--spawn`
-2. **Immediately notify the user**: "Submitted, generating..."
-3. After the command completes, extract the result URL from the output JSON and display it to the user
-
-### Credential Prerequisites
-
-The delivery scripts for spawn sub-Agents require IM channel credentials (shared automatically on the same machine as the parent Agent):
-
-| Channel    | Credential Source                                             | Configuration                      |
-| ---------- | ------------------------------------------------------------- | ---------------------------------- |
-| `feishu`   | `~/.openclaw/openclaw.json` → `channels.feishu.accounts.main` | Set `appId` / `appSecret`          |
-| `telegram` | Environment variable `TELEGRAM_BOT_TOKEN`                     | `export TELEGRAM_BOT_TOKEN=xxx`    |
-| `discord`  | Framework built-in (message tool)                             | No additional configuration needed |
-
----
-
-## 7. Job Management
+## Job Management & Errors
 
 ```bash
-python3 scripts/artclaw.py job-status --job-id "job_xxxxxxxx"    # Query status
-python3 scripts/artclaw.py list-jobs --status success --limit 10  # List history
-python3 scripts/artclaw.py cancel-job --job-id "job_xxxxxxxx"     # Cancel job
-python3 scripts/artclaw.py account-info                           # Check balance
-python3 scripts/artclaw.py last-job                               # Latest job
-python3 scripts/artclaw.py history --limit 50                     # Local history
+python3 scripts/artclaw.py job-status --job-id "job_xxxxxxxx"
+python3 scripts/artclaw.py list-jobs --status success --limit 10
+python3 scripts/artclaw.py cancel-job --job-id "job_xxxxxxxx"
+python3 scripts/artclaw.py last-job
+python3 scripts/artclaw.py history --limit 50
 ```
 
+Use `job-status`, `last-job`, and `history` for follow-up instead of resubmitting generation requests. There is no `latest-job` command.
+
+| Error | Cause | Resolution |
+| --- | --- | --- |
+| `401 Unauthorized` | API key invalid, missing, or revoked | Guide user to regenerate the key |
+| `402` / insufficient credits | Account balance depleted | Guide user to top up at https://artclaw.com/settings |
+| `404 Job not found` | Job ID does not exist or expired after 24h | Tell user the job expired and ask whether to regenerate |
+| `404 Workflow not found` | Workflow does not exist | Run `list-workflows` first |
+| `429 Too Many Requests` | Rate limit exceeded | Wait and retry |
+
 ---
 
-## 8. Self-Update
+## Delivery Targets
 
-Keep the skill up to date by pulling the latest version from GitHub:
+Use delivery options only when the platform adapter supports spawn/delivery mode.
+
+`--spawn` must be paired with both `--deliver-to` and `--deliver-channel`.
+
+| Scenario | `--deliver-channel` | `--deliver-to` value | Source |
+| --- | --- | --- | --- |
+| Feishu group chat | `feishu` | `oc_xxx` chat ID | `conversation_label` or `chat_id`, strip `chat:` prefix |
+| Feishu direct message | `feishu` | `ou_xxx` open ID | `sender_id`, strip `user:` prefix |
+| Telegram | `telegram` | `chat_id` | Inbound message context |
+| Discord | `discord` | `channel_id` | Inbound message context |
+
+For Feishu, check `is_group_chat` in inbound metadata: `true` → use `oc_` chat ID; `false` → use `ou_` open ID.
+
+| Channel | Credential source |
+| --- | --- |
+| `feishu` | `~/.openclaw/openclaw.json` → `channels.feishu.accounts.main` |
+| `telegram` | `TELEGRAM_BOT_TOKEN` environment variable |
+| `discord` | Framework built-in message tool |
+
+---
+
+## Self Update
 
 ```bash
-# Update the entire repo (recommended)
 python3 scripts/artclaw.py self-update
+```
 
-# Preview what would change without writing anything
+Preview without writing files:
+
+```bash
 python3 scripts/artclaw.py self-update --dry-run
 ```
 
-- Downloads `https://github.com/ArtClaw1/artclaw-skill/archive/refs/heads/main.zip`
-- Atomically applies added / modified files to the local repo root
-- Reports a JSON summary: `added`, `modified`, `unchanged_count`
-- Does **not** delete local-only files
-- No git installation required
-
----
-
-## 9. Quick Commands Reference
-
-| Command                                   | Description                    | User-Facing |
-| ----------------------------------------- | ------------------------------ | ----------- |
-| `generate-image --spawn`                  | Text-to-image / Image-to-image | Yes         |
-| `generate-video --spawn`                  | Text-to-video / Image-to-video | Yes         |
-| `generate-marketing-image --spawn`        | Marketing advertisement image  | Yes         |
-| `run-workflow --spawn`                    | Execute workflow               | Yes         |
-| `list-workflows`                          | List available workflows       | Yes         |
-| `analyze-image` / `analyze-video`         | Multimodal analysis            | Yes         |
-| `analyze-script` / `analyze-characters`   | Script / Character analysis    | Yes         |
-| `job-status` / `list-jobs` / `cancel-job` | Job management                 | Yes         |
-| `account-info`                            | Check balance                  | Yes         |
-| `last-job` / `history`                    | Local job history              | Yes         |
-| `self-update`                             | Update skill from GitHub       | Maintenance |
-| `verify-key`                              | Verify API Key                 | Setup only  |
-| `config` / `config-init`                  | Configuration management       | Setup only  |
-
----
-
-## 11. Key Rules
-
-1. **Must be async** — Use `--spawn` if `sessions_spawn` is available, otherwise use framework background execution. Blocking the main Agent is prohibited
-2. **Reply to user immediately after submission** — "Submitted, generating...", do not wait silently
-3. **Use CLI, not curl** — `artclaw.py` already handles retry, polling, and error handling
-4. **Guide users to top up when credits are insufficient** — https://artclaw.com/settings
-5. **Deliver results as native messages** — Use native video messages for videos, native image messages for images, do not just send URLs
-
----
-
-## 12. Error Handling
-
-| Error                        | Cause                                      | Resolution                                          |
-| ---------------------------- | ------------------------------------------ | --------------------------------------------------- |
-| `401 Unauthorized`           | API Key invalid/missing/revoked            | Guide user to regenerate Key                        |
-| `402` / Insufficient credits | Account balance depleted                   | Guide to top up: https://artclaw.com/settings       |
-| `404 Job not found`          | job_id does not exist or has expired (24h) | Inform user the job has expired, please regenerate  |
-| `404 Workflow not found`     | Workflow does not exist                    | Run `list-workflows` first to confirm available IDs |
-| `429 Too Many Requests`      | Rate limit exceeded (120 requests/minute)  | Wait and retry                                      |
-
----
-
-## 13. Data Storage
-
-All data is stored in `~/.artclaw/`: `config.json` (API Key), `last_job.json` (latest job), `history/` (history records).
+Downloads `https://github.com/ArtClaw1/artclaw-skill/archive/refs/heads/main.zip`, atomically applies added or modified files, and reports a JSON summary. Does not delete local-only files.

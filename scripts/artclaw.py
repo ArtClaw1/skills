@@ -84,6 +84,7 @@ VALID_RESOLUTIONS_IMAGE = frozenset({"1K", "2K", "4K"})
 VALID_RESOLUTIONS_VIDEO = frozenset({"480p", "720p", "1080p"})
 TERMINAL_STATUSES = frozenset({"success", "failed", "canceled", "expired"})
 ALLOWED_URL_SCHEMES = ("http://", "https://")
+ALLOWED_IMAGE_DATA_URI_PREFIX = "data:image/"
 
 # Spawn
 SPAWN_TIMEOUT_SECONDS = 2400  # 40 minutes
@@ -629,9 +630,17 @@ def _collect_optional_args(args, keys: List[str]) -> dict:
 
 
 def _validate_url(url: str):
-    if not any(url.startswith(s) for s in ALLOWED_URL_SCHEMES):
+    is_http_url = any(url.startswith(s) for s in ALLOWED_URL_SCHEMES)
+    is_image_data_uri = (
+        url.startswith(ALLOWED_IMAGE_DATA_URI_PREFIX)
+        and ";base64," in url[:128]
+    )
+    if not (is_http_url or is_image_data_uri):
         print(json.dumps({
-            "error": f"Invalid URL scheme. Only http:// and https:// are allowed.",
+            "error": (
+                "Invalid URL scheme. Only http://, https://, and "
+                "data:image/*;base64,... are allowed."
+            ),
             "url": url[:100] + "..." if len(url) > 100 else url,
         }), file=sys.stderr)
         sys.exit(1)

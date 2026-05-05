@@ -5,7 +5,7 @@
   "description": "Invoke ARTCLAW platform's AI content creation capabilities via REST API. Supports AI image generation, video generation, workflow execution, multimodal analysis, and more.",
   "author": {
     "name": "ARTCLAW Team",
-    "url": "https://artclaw.com"
+    "url": "https://artclaw.com/"
   },
   "license": "MIT",
   "keywords": [

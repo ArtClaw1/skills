@@ -1,4 +1,4 @@
-"""ARTCLAW AI Creative Suite — OpenCode Skill Package
+"""ARTCLAW AI Creative Suite — Skill Package
 
 This package provides AI content creation capabilities via the ARTCLAW REST API,
 including image generation, video generation, workflow execution,
