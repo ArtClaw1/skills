@@ -1,4 +1,4 @@
-"""ARTCLAW AI Creative Suite — OpenCode Skill Package
+"""ARTCLAW AI Creative Suite — Skill Package
 
 This package provides AI content creation capabilities via the ARTCLAW REST API,
 including image generation, video generation, workflow execution,
@@ -6,7 +6,7 @@ multimodal analysis, and prompt enhancement.
 
 REST API Base: https://artclaw.com/api/v1
 Auth: API Key (starts with vk_) passed as `X-API-KEY` HTTP header
-Get your key: https://artclaw.com/#/settings
+Get your key: https://artclaw.com/settings
 """
 
 SKILL_NAME = "artclaw-creative-suite"
